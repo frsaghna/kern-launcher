@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.SET_ALARM" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.provider.AlarmClock.ACTION_SET_TIMER" />
+        </intent>
+        <intent>
+            <action android:name="android.provider.AlarmClock.ACTION_SET_ALARM" />
+        </intent>
+        <intent>
+            <action android:name="android.provider.AlarmClock.ACTION_SHOW_TIMERS" />
+        </intent>
+        <package android:name="com.sec.android.app.clockpackage" />
+        <package android:name="com.google.android.deskclock" />
+        <package android:name="com.android.deskclock" />
+    </queries>
+
+    <application
+        android:name=".KernApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Kern">
+        
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:clearTaskOnLaunch="true"
+            android:stateNotNeeded="true"
+            android:windowSoftInputMode="adjustResize|stateAlwaysVisible">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

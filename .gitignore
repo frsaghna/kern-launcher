@@ -1,0 +1,34 @@
+# Built Application Artifacts & Gradle Build Outputs
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+**/build/
+build/
+.gradle/
+.kotlin/
+
+# Android Studio & IntelliJ IDE Files
+.idea/
+*.iml
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# Signing Keys & Credentials
+*.jks
+*.keystore
+google-services.json
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+*~
+
+# Temporary Logs & Editor Cache
+*.log
+.system_generated/
+.gemini/
