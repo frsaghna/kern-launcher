@@ -98,9 +98,9 @@ class SearchEngine {
         val tokenized = InputTokenizer.tokenize(trimmed)
         val keyword = tokenized.keyword.lowercase()
 
-        // 1. Built-in Kern Settings Command Check (Prefix matching so typing s, set, setting, settings, config shows Kern Settings)
+        // 1. Built-in Kern Settings Command Check (Exact keyword match)
         val settingsKeywords = listOf("settings", "setting", "config", "pref", "kern")
-        if (settingsKeywords.any { it.startsWith(keyword) || keyword.startsWith(it) }) {
+        if (keyword in settingsKeywords) {
             results.add(
                 SearchResult(
                     id = "builtin_settings",
@@ -113,7 +113,7 @@ class SearchEngine {
             )
         }
 
-        // 2. System Settings Index Command 'set' (typing 'set ' shows all system settings options)
+        // 2. System Settings Index Command 'set' (exact keyword 'set')
         if (keyword == "set") {
             val subQuery = tokenized.args.trim().lowercase()
             val filteredOptions = if (subQuery.isBlank()) {
@@ -126,7 +126,6 @@ class SearchEngine {
                 }
             }
 
-            // When user provides a specific subQuery (e.g. 'set wellbeing', 'set screentime'), give matched system setting top priority (score 4500.0) above Kern Settings (4000.0)
             var initialScore = if (subQuery.isNotBlank()) 4500.0 else 3800.0
             filteredOptions.forEach { opt ->
                 results.add(
@@ -145,7 +144,7 @@ class SearchEngine {
 
         // 3. Help Command Check
         val helpKeywords = listOf("help", "?", "manual")
-        if (helpKeywords.any { it.startsWith(keyword) || keyword.startsWith(it) }) {
+        if (keyword in helpKeywords) {
             results.add(
                 SearchResult(
                     id = "builtin_help",
@@ -160,7 +159,7 @@ class SearchEngine {
 
         // 4. Hidden Apps Command Check
         val hiddenKeywords = listOf("hidden", "hiddenapps", "secret")
-        if (hiddenKeywords.any { it.startsWith(keyword) || keyword.startsWith(it) }) {
+        if (keyword in hiddenKeywords) {
             results.add(
                 SearchResult(
                     id = "builtin_hidden",
@@ -175,7 +174,7 @@ class SearchEngine {
 
         // 5. TUI View Mode Toggle Command Check
         val tuiKeywords = listOf("tui", "tuiview", "terminal")
-        if (tuiKeywords.any { it.startsWith(keyword) || keyword.startsWith(it) }) {
+        if (keyword in tuiKeywords) {
             results.add(
                 SearchResult(
                     id = "builtin_tui",
@@ -266,9 +265,9 @@ class SearchEngine {
             )
         }
 
-        // 10. Built-in Deep Search & Custom App Commands
-        when {
-            keyword == "ai" -> {
+        // 10. Built-in Deep Search & Custom App Commands (STRICT EXACT MATCHES ONLY)
+        when (keyword) {
+            "ai" -> {
                 val providerName = when (aiProvider.uppercase()) {
                     "GEMINI" -> "Google Gemini"
                     "PERPLEXITY" -> "Perplexity AI"
@@ -286,7 +285,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("log", "lazylogs").any { it == keyword || it.startsWith(keyword) } -> {
+            "log", "lazylogs" -> {
                 val parsedLazyLogs = CommandParser.parse(trimmed) as? Command.LazyLogsAdd
                 if (parsedLazyLogs != null) {
                     results.add(
@@ -301,7 +300,7 @@ class SearchEngine {
                     )
                 }
             }
-            listOf("maps", "map").any { it == keyword || it.startsWith(keyword) } -> {
+            "maps", "map" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_maps",
@@ -313,7 +312,7 @@ class SearchEngine {
                     )
                 )
             }
-            keyword == "yt" -> {
+            "yt" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_yt",
@@ -325,7 +324,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("spot", "spotify", "music").any { it == keyword || it.startsWith(keyword) } -> {
+            "spot", "spotify", "music" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_spotify",
@@ -337,7 +336,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("play", "store", "ps").any { it == keyword || it.startsWith(keyword) } -> {
+            "play", "store", "ps" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_playstore",
@@ -349,7 +348,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("gh", "github").any { it == keyword || it.startsWith(keyword) } -> {
+            "gh", "github" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_github",
@@ -361,7 +360,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("wiki", "wikipedia").any { it == keyword || it.startsWith(keyword) } -> {
+            "wiki", "wikipedia" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_wiki",
@@ -373,7 +372,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("reddit", "r").any { it == keyword || it.startsWith(keyword) } -> {
+            "reddit", "r" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_reddit",
@@ -385,7 +384,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("x", "tw", "twitter").any { it == keyword || it.startsWith(keyword) } -> {
+            "x", "tw", "twitter" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_twitter",
@@ -397,7 +396,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("ddg", "duck").any { it == keyword || it.startsWith(keyword) } -> {
+            "ddg", "duck" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_ddg",
@@ -409,19 +408,19 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("g", "google").any { it == keyword || it.startsWith(keyword) } -> {
+            "g", "google" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_google",
                         type = SearchResultType.BUILTIN_COMMAND,
                         title = "Google Search",
                         subtitle = if (tokenized.args.isBlank()) "Launch Google app" else "Search '${tokenized.args}' on Google",
-                        actionCommand = Command.GoogleSearch(trimmed),
+                        actionCommand = Command.GoogleSearch(tokenized.args),
                         score = 1500.0
                     )
                 )
             }
-            keyword == "timer" -> {
+            "timer" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_timer",
