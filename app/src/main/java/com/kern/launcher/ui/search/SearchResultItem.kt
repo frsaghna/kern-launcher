@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
-import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Map
@@ -154,7 +153,6 @@ fun SearchResultIcon(result: SearchResult, sharpCorners: Boolean) {
             is Command.Help -> Icons.AutoMirrored.Filled.Help to MaterialTheme.colorScheme.primary
             is Command.GoogleMaps -> Icons.Default.Map to KernGreen
             is Command.YoutubeSearch -> Icons.Default.VideoLibrary to KernYellow
-            is Command.Calculator -> Icons.Default.Calculate to MaterialTheme.colorScheme.primary
             is Command.Timer -> Icons.Default.Timer to MaterialTheme.colorScheme.primary
             is Command.OpenSettings -> Icons.Default.Settings to MaterialTheme.colorScheme.primary
             is Command.CustomAlias -> Icons.Default.Code to KernGreen

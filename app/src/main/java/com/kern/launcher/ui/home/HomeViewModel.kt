@@ -79,18 +79,27 @@ class HomeViewModel(
         viewModelScope.launch {
             searchResults.collect { results ->
                 val currentQuery = _query.value.trim().lowercase()
-                val builtinKeywords = listOf("settings", "setting", "config", "pref", "kern", "help", "?", "manual", "tui", "tuiview", "terminal", "hidden", "secret", "info", "hide", "unhide", "ai", "gpt", "chatgpt", "gemini", "log", "lazylogs", "calc", "timer", "g", "google", "yt", "youtube", "spot", "spotify", "music", "play", "store", "ps", "gh", "github", "wiki", "wikipedia", "reddit", "r", "x", "tw", "twitter", "ddg", "duck", "maps", "map")
+                val builtinKeywords = listOf(
+                    "settings", "setting", "config", "pref", "kern", "set",
+                    "help", "?", "manual", "tui", "tuiview", "terminal",
+                    "hidden", "hiddenapps", "secret", "info", "hide", "unhide",
+                    "ai", "log", "lazylogs", "timer",
+                    "g", "google", "yt", "spot", "spotify", "music",
+                    "play", "store", "ps", "gh", "github", "wiki", "wikipedia",
+                    "reddit", "r", "x", "tw", "twitter", "ddg", "duck", "maps", "map"
+                )
 
-                // Check if current query matches or is a prefix of any built-in command keyword
-                val isBuiltinPrefix = builtinKeywords.any { it.startsWith(currentQuery) || currentQuery.startsWith(it) }
+                // Check if current query is a prefix of any built-in command keyword
+                val isBuiltinPrefix = builtinKeywords.any { keyword ->
+                    currentQuery.length <= keyword.length && keyword.startsWith(currentQuery)
+                }
 
                 if (currentQuery.isNotEmpty() && !isBuiltinPrefix && userSettings.value.autoLaunchSingleMatch) {
                     val appResults = results.filter { it.type == SearchResultType.APP }
                     val builtinResults = results.filter { it.type == SearchResultType.BUILTIN_COMMAND && it.id != "fallback_search" }
                     val aliasResults = results.filter { it.type == SearchResultType.ALIAS }
-                    val calcResults = results.filter { it.type == SearchResultType.CALCULATOR_RESULT }
 
-                    if (appResults.size == 1 && builtinResults.isEmpty() && aliasResults.isEmpty() && calcResults.isEmpty()) {
+                    if (appResults.size == 1 && builtinResults.isEmpty() && aliasResults.isEmpty()) {
                         val singleApp = appResults.first()
                         executeResult(singleApp, onOpenSettings = {}, onOpenHelp = {}, onOpenHiddenApps = {})
                     }

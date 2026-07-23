@@ -15,7 +15,7 @@ sealed class Command {
     data class AiSearch(val prompt: String, val provider: String = "CHATGPT") : Command()
     data class LazyLogsAdd(val rawText: String) : Command()
     data class DeepLinkUri(val uriString: String, val label: String) : Command()
-    data class Calculator(val expression: String, val result: String) : Command()
+    data class SystemSettingsPage(val action: String, val pageTitle: String) : Command()
     data class Timer(val durationSeconds: Int, val rawInput: String) : Command()
     data class HideApp(val app: AppInfo) : Command()
     data class UnhideApp(val packageName: String, val label: String) : Command()

@@ -1,7 +1,5 @@
 package com.kern.launcher.command.executor
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.provider.AlarmClock
@@ -41,6 +39,16 @@ class CommandExecutor(
                         }
                     } else {
                         Toast.makeText(context, "App '${command.app.label}' is no longer installed", Toast.LENGTH_SHORT).show()
+                        false
+                    }
+                }
+                is Command.SystemSettingsPage -> {
+                    try {
+                        context.startActivity(IntentFactory.createSystemSettingsPageIntent(context, command.action))
+                        historyRepository.recordCommand("set ${command.pageTitle}")
+                        true
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Could not open settings page '${command.pageTitle}'", Toast.LENGTH_SHORT).show()
                         false
                     }
                 }
@@ -119,36 +127,53 @@ class CommandExecutor(
                     historyRepository.recordCommand(if (command.query.isNotBlank()) "ddg ${command.query}" else "ddg")
                     true
                 }
-                is Command.Calculator -> {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = ClipData.newPlainText("Calculator Result", command.result)
-                    clipboard.setPrimaryClip(clip)
-                    Toast.makeText(context, "Result: ${command.result} (copied to clipboard)", Toast.LENGTH_SHORT).show()
-                    historyRepository.recordCommand("calc ${command.expression}")
-                    true
-                }
                 is Command.Timer -> {
+                    var started = false
+
+                    // 1. Try standard AlarmClock.ACTION_SET_TIMER
                     try {
                         val timerIntent = IntentFactory.createTimerIntent(command.durationSeconds, command.rawInput)
                         context.startActivity(timerIntent)
                         Toast.makeText(context, "Timer set for ${command.rawInput}", Toast.LENGTH_SHORT).show()
                         historyRepository.recordCommand("timer ${command.rawInput}")
-                        true
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        try {
-                            val fallbackIntent = Intent(AlarmClock.ACTION_SHOW_TIMERS).apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        started = true
+                    } catch (e1: Exception) {
+                        // 2. Try explicit package timer intents
+                        val clockPackages = listOf(
+                            "com.sec.android.app.clockpackage",
+                            "com.google.android.deskclock",
+                            "com.android.deskclock"
+                        )
+                        for (pkg in clockPackages) {
+                            try {
+                                val pkgTimerIntent = IntentFactory.createTimerIntent(command.durationSeconds, command.rawInput).apply {
+                                    setPackage(pkg)
+                                }
+                                if (pkgTimerIntent.resolveActivity(context.packageManager) != null) {
+                                    context.startActivity(pkgTimerIntent)
+                                    Toast.makeText(context, "Timer set for ${command.rawInput}", Toast.LENGTH_SHORT).show()
+                                    historyRepository.recordCommand("timer ${command.rawInput}")
+                                    started = true
+                                    break
+                                }
+                            } catch (e: Exception) {
+                                // ignore
                             }
-                            context.startActivity(fallbackIntent)
-                            Toast.makeText(context, "Opened Clock app (${command.rawInput})", Toast.LENGTH_SHORT).show()
-                            historyRepository.recordCommand("timer ${command.rawInput}")
-                            true
-                        } catch (e2: Exception) {
-                            Toast.makeText(context, "No Clock app found to set timer", Toast.LENGTH_SHORT).show()
-                            false
+                        }
+
+                        // 3. Fallback: Launch Clock app directly via IntentFactory.openClock
+                        if (!started) {
+                            try {
+                                IntentFactory.openClock(context)
+                                Toast.makeText(context, "Opened Clock app (${command.rawInput})", Toast.LENGTH_SHORT).show()
+                                historyRepository.recordCommand("timer ${command.rawInput}")
+                                started = true
+                            } catch (e3: Exception) {
+                                Toast.makeText(context, "Could not launch Clock app", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
+                    started
                 }
                 is Command.AppInfoSettings -> {
                     try {

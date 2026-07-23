@@ -1,6 +1,6 @@
 package com.kern.launcher.search.engine
 
-import com.kern.launcher.command.builtin.CalculatorEvaluator
+import android.provider.Settings
 import com.kern.launcher.command.parser.CommandParser
 import com.kern.launcher.command.parser.InputTokenizer
 import com.kern.launcher.model.Alias
@@ -9,6 +9,43 @@ import com.kern.launcher.model.Command
 import com.kern.launcher.model.SearchResult
 import com.kern.launcher.model.SearchResultType
 import com.kern.launcher.search.ranking.SearchRanker
+
+private data class SystemSettingOption(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val action: String,
+    val keywords: List<String>
+)
+
+private val SYSTEM_SETTINGS_OPTIONS = listOf(
+    SystemSettingOption("set_wellbeing", "Digital Wellbeing & Screen Time", "App timers, screen time dashboard & parental controls", "com.google.android.apps.wellbeing.action.WELLBEING_DASHBOARD", listOf("wellbeing", "digitalwellbeing", "screentime", "screen time", "app timer", "parental", "usage")),
+    SystemSettingOption("set_dns", "Private DNS Settings", "Configure Private DNS provider & mode", "android.settings.DNS_SETTINGS", listOf("dns", "privatedns", "private dns", "adguard", "cloudflare")),
+    SystemSettingOption("set_vpn", "VPN Settings", "Configure Virtual Private Network profiles", Settings.ACTION_VPN_SETTINGS, listOf("vpn", "proxy")),
+    SystemSettingOption("set_wifi", "Wi-Fi Settings", "Manage Wi-Fi networks & connections", Settings.ACTION_WIFI_SETTINGS, listOf("wifi", "wlan", "internet")),
+    SystemSettingOption("set_bluetooth", "Bluetooth Settings", "Pair & manage Bluetooth devices", Settings.ACTION_BLUETOOTH_SETTINGS, listOf("bluetooth", "bt")),
+    SystemSettingOption("set_display", "Display & Brightness", "Adjust screen brightness, font, & dark mode", Settings.ACTION_DISPLAY_SETTINGS, listOf("display", "screen", "brightness", "font")),
+    SystemSettingOption("set_sound", "Sound & Vibration", "Volume, ringtones, & silent mode", Settings.ACTION_SOUND_SETTINGS, listOf("sound", "volume", "audio", "vibration", "ringtone")),
+    SystemSettingOption("set_dnd", "Do Not Disturb (DND)", "Configure DND schedules & priority notifications", Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS, listOf("dnd", "do not disturb", "silent")),
+    SystemSettingOption("set_battery", "Battery & Power", "Battery usage, battery saver & charging", Settings.ACTION_BATTERY_SAVER_SETTINGS, listOf("battery", "power", "saver", "charge")),
+    SystemSettingOption("set_storage", "Storage Settings", "Manage internal storage & SD card", Settings.ACTION_INTERNAL_STORAGE_SETTINGS, listOf("storage", "memory", "sdcard")),
+    SystemSettingOption("set_location", "Location & GPS", "Location permissions & GPS mode", Settings.ACTION_LOCATION_SOURCE_SETTINGS, listOf("location", "gps")),
+    SystemSettingOption("set_apps", "Applications Manager", "Installed apps & app permissions", Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS, listOf("apps", "applications", "manager")),
+    SystemSettingOption("set_default_apps", "Default Applications", "Choose default browser, launcher & assistant", Settings.ACTION_HOME_SETTINGS, listOf("default", "defaultapps", "browser", "home")),
+    SystemSettingOption("set_notifications", "Notifications Settings", "Notification history, banners & lockscreen notifs", Settings.ACTION_ALL_APPS_NOTIFICATION_SETTINGS, listOf("notif", "notification", "banner")),
+    SystemSettingOption("set_nfc", "NFC & Contactless", "NFC & contactless payments settings", Settings.ACTION_NFC_SETTINGS, listOf("nfc", "pay", "contactless")),
+    SystemSettingOption("set_hotspot", "Hotspot & Tethering", "Mobile hotspot, USB tethering & network", Settings.ACTION_WIRELESS_SETTINGS, listOf("hotspot", "tethering", "wireless", "network", "cellular")),
+    SystemSettingOption("set_developer", "Developer Options", "USB debugging, OEM unlock & advanced tools", Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS, listOf("developer", "dev", "debugging", "usb")),
+    SystemSettingOption("set_security", "Security & Privacy", "Screen lock, fingerprint, & privacy permissions", Settings.ACTION_SECURITY_SETTINGS, listOf("security", "privacy", "lockscreen", "fingerprint")),
+    SystemSettingOption("set_accounts", "Accounts & Sync", "Manage Google accounts & data auto-sync", Settings.ACTION_SYNC_SETTINGS, listOf("accounts", "sync", "google")),
+    SystemSettingOption("set_date", "Date & Time", "Timezone & automatic clock sync", Settings.ACTION_DATE_SETTINGS, listOf("date", "time", "clock")),
+    SystemSettingOption("set_language", "Language & Input", "System languages & physical/virtual keyboards", Settings.ACTION_LOCALE_SETTINGS, listOf("language", "locale", "keyboard", "input")),
+    SystemSettingOption("set_accessibility", "Accessibility", "Screen readers, magnification & accessibility", Settings.ACTION_ACCESSIBILITY_SETTINGS, listOf("accessibility", "vision", "talkback")),
+    SystemSettingOption("set_airplane", "Airplane Mode", "Network flight mode toggle", Settings.ACTION_AIRPLANE_MODE_SETTINGS, listOf("airplane", "flight", "mode")),
+    SystemSettingOption("set_about", "About Phone", "Device info, Android version & build number", Settings.ACTION_DEVICE_INFO_SETTINGS, listOf("about", "phone", "device", "version", "system info")),
+    SystemSettingOption("set_cast", "Cast & Screen Mirroring", "Wireless display, Smart View & screen cast", Settings.ACTION_CAST_SETTINGS, listOf("cast", "mirror", "screen mirror", "smartview")),
+    SystemSettingOption("set_main", "Main System Settings", "Open full phone Settings app", Settings.ACTION_SETTINGS, listOf("main", "all", "system", "settings"))
+)
 
 class SearchEngine {
 
@@ -61,7 +98,7 @@ class SearchEngine {
         val tokenized = InputTokenizer.tokenize(trimmed)
         val keyword = tokenized.keyword.lowercase()
 
-        // 1. Built-in Kern Settings Command Check (Prefix matching so typing s, set, setting, settings, config always shows Kern Settings #1)
+        // 1. Built-in Kern Settings Command Check (Prefix matching so typing s, set, setting, settings, config shows Kern Settings)
         val settingsKeywords = listOf("settings", "setting", "config", "pref", "kern")
         if (settingsKeywords.any { it.startsWith(keyword) || keyword.startsWith(it) }) {
             results.add(
@@ -76,7 +113,37 @@ class SearchEngine {
             )
         }
 
-        // 2. Help Command Check
+        // 2. System Settings Index Command 'set' (typing 'set ' shows all system settings options)
+        if (keyword == "set") {
+            val subQuery = tokenized.args.trim().lowercase()
+            val filteredOptions = if (subQuery.isBlank()) {
+                SYSTEM_SETTINGS_OPTIONS
+            } else {
+                SYSTEM_SETTINGS_OPTIONS.filter { option ->
+                    option.title.lowercase().contains(subQuery) ||
+                            option.subtitle.lowercase().contains(subQuery) ||
+                            option.keywords.any { it.contains(subQuery) }
+                }
+            }
+
+            // When user provides a specific subQuery (e.g. 'set wellbeing', 'set screentime'), give matched system setting top priority (score 4500.0) above Kern Settings (4000.0)
+            var initialScore = if (subQuery.isNotBlank()) 4500.0 else 3800.0
+            filteredOptions.forEach { opt ->
+                results.add(
+                    SearchResult(
+                        id = opt.id,
+                        type = SearchResultType.BUILTIN_COMMAND,
+                        title = "System Setting: ${opt.title}",
+                        subtitle = opt.subtitle,
+                        actionCommand = Command.SystemSettingsPage(opt.action, opt.title),
+                        score = initialScore
+                    )
+                )
+                initialScore -= 1.0
+            }
+        }
+
+        // 3. Help Command Check
         val helpKeywords = listOf("help", "?", "manual")
         if (helpKeywords.any { it.startsWith(keyword) || keyword.startsWith(it) }) {
             results.add(
@@ -91,7 +158,7 @@ class SearchEngine {
             )
         }
 
-        // 3. Hidden Apps Command Check
+        // 4. Hidden Apps Command Check
         val hiddenKeywords = listOf("hidden", "hiddenapps", "secret")
         if (hiddenKeywords.any { it.startsWith(keyword) || keyword.startsWith(it) }) {
             results.add(
@@ -106,7 +173,7 @@ class SearchEngine {
             )
         }
 
-        // 4. TUI View Mode Toggle Command Check
+        // 5. TUI View Mode Toggle Command Check
         val tuiKeywords = listOf("tui", "tuiview", "terminal")
         if (tuiKeywords.any { it.startsWith(keyword) || keyword.startsWith(it) }) {
             results.add(
@@ -121,7 +188,7 @@ class SearchEngine {
             )
         }
 
-        // 5. Info Command (App Info Settings)
+        // 6. Info Command (App Info Settings)
         if (keyword == "info") {
             val targetArg = tokenized.args
             val matchingApps = if (targetArg.isBlank()) visibleApps else visibleApps.filter { app ->
@@ -142,7 +209,7 @@ class SearchEngine {
             }
         }
 
-        // 6. Hide App Command
+        // 7. Hide App Command
         if (keyword == "hide") {
             val targetArg = tokenized.args
             val appsToHide = if (targetArg.isBlank()) visibleApps else visibleApps.filter { app ->
@@ -163,7 +230,7 @@ class SearchEngine {
             }
         }
 
-        // 7. Unhide App Command
+        // 8. Unhide App Command
         if (keyword == "unhide") {
             val targetArg = tokenized.args
             val appsToUnhide = if (targetArg.isBlank()) hiddenApps else hiddenApps.filter { app ->
@@ -184,7 +251,7 @@ class SearchEngine {
             }
         }
 
-        // 8. Alias Check
+        // 9. Alias Check
         aliasMap[keyword]?.let { userAlias ->
             val resolvedCommand = CommandParser.parse("${userAlias.targetCommandOrPackage} ${tokenized.args}".trim())
             results.add(
@@ -199,40 +266,14 @@ class SearchEngine {
             )
         }
 
-        // 9. Calculator check
-        val mathResult = CalculatorEvaluator.evaluate(trimmed)
-            ?: (if (keyword == "calc") CalculatorEvaluator.evaluate(tokenized.args) else null)
-
-        if (mathResult != null) {
-            results.add(
-                SearchResult(
-                    id = "calc_$trimmed",
-                    type = SearchResultType.CALCULATOR_RESULT,
-                    title = "= $mathResult",
-                    subtitle = "Calculator ($trimmed) — press Enter to copy",
-                    actionCommand = Command.Calculator(trimmed, mathResult),
-                    score = 1800.0
-                )
-            )
-        }
-
         // 10. Built-in Deep Search & Custom App Commands
         when {
-            listOf("ai", "gpt", "chatgpt", "gemini").any { it == keyword || it.startsWith(keyword) } -> {
-                val providerName = when (keyword) {
-                    "gpt", "chatgpt" -> "ChatGPT"
-                    "gemini" -> "Google Gemini"
-                    else -> when (aiProvider.uppercase()) {
-                        "GEMINI" -> "Google Gemini"
-                        "PERPLEXITY" -> "Perplexity AI"
-                        "CLAUDE" -> "Claude AI"
-                        else -> "ChatGPT"
-                    }
-                }
-                val selectedProviderCode = when (keyword) {
-                    "gpt", "chatgpt" -> "CHATGPT"
-                    "gemini" -> "GEMINI"
-                    else -> aiProvider
+            keyword == "ai" -> {
+                val providerName = when (aiProvider.uppercase()) {
+                    "GEMINI" -> "Google Gemini"
+                    "PERPLEXITY" -> "Perplexity AI"
+                    "CLAUDE" -> "Claude AI"
+                    else -> "ChatGPT"
                 }
                 results.add(
                     SearchResult(
@@ -240,7 +281,7 @@ class SearchEngine {
                         type = SearchResultType.BUILTIN_COMMAND,
                         title = "AI Prompt ($providerName)",
                         subtitle = if (tokenized.args.isBlank()) "Launch $providerName app (Add query to search)" else "Ask $providerName '${tokenized.args}'",
-                        actionCommand = Command.AiSearch(prompt = tokenized.args, provider = selectedProviderCode),
+                        actionCommand = Command.AiSearch(prompt = tokenized.args, provider = aiProvider),
                         score = 1600.0
                     )
                 )
@@ -272,7 +313,7 @@ class SearchEngine {
                     )
                 )
             }
-            listOf("yt", "youtube").any { it == keyword || it.startsWith(keyword) } -> {
+            keyword == "yt" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_yt",
@@ -375,7 +416,7 @@ class SearchEngine {
                         type = SearchResultType.BUILTIN_COMMAND,
                         title = "Google Search",
                         subtitle = if (tokenized.args.isBlank()) "Launch Google app" else "Search '${tokenized.args}' on Google",
-                        actionCommand = Command.GoogleSearch(tokenized.args),
+                        actionCommand = Command.GoogleSearch(trimmed),
                         score = 1500.0
                     )
                 )
@@ -412,7 +453,7 @@ class SearchEngine {
         results.addAll(matchingApps)
 
         // 12. Fallback Search Option
-        if (results.none { it.type == SearchResultType.BUILTIN_COMMAND && (it.id == "builtin_google" || it.id == "builtin_settings" || it.id == "builtin_help" || it.id == "builtin_tui" || it.id.startsWith("hide_") || it.id.startsWith("unhide_") || it.id.startsWith("info_") || it.id == "builtin_lazylogs" || it.id == "builtin_ai") }) {
+        if (results.none { it.type == SearchResultType.BUILTIN_COMMAND && (it.id == "builtin_google" || it.id == "builtin_settings" || it.id.startsWith("set_") || it.id == "builtin_help" || it.id == "builtin_tui" || it.id.startsWith("hide_") || it.id.startsWith("unhide_") || it.id.startsWith("info_") || it.id == "builtin_lazylogs" || it.id == "builtin_ai") }) {
             results.add(
                 SearchResult(
                     id = "fallback_search",

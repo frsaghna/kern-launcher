@@ -85,8 +85,8 @@ fun HelpDialog(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 HelpItem("help / ?", "Display this manual")
+                HelpItem("set <query>", "Search 25+ System Settings (e.g. set wifi, set battery)")
                 HelpItem("ai / gpt <prompt>", "Ask AI provider (e.g. ai jelaskan relativitas)")
-                HelpItem("gemini <prompt>", "Ask Google Gemini directly")
                 HelpItem("log <text>", "Send text to LazyLogs (e.g. log makan siang 25k)")
                 HelpItem("<scheme>://...", "Direct execute any custom App Deep Link URI")
                 HelpItem("spot / music <query>", "Search music on Spotify app")
@@ -104,7 +104,6 @@ fun HelpDialog(
                 HelpItem("unhide <app>", "Restore hidden app to search")
                 HelpItem("hidden / secret", "View and manage all hidden applications")
                 HelpItem("tui / tuiview", "Toggle experimental retro TUI Mode")
-                HelpItem("calc <expr>", "Evaluate math expression (e.g., 15*12)")
                 HelpItem("timer <duration>", "Set timer alarm (e.g., timer 20m, 30s)")
                 HelpItem("settings", "Open launcher settings screen")
 

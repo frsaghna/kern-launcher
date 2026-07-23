@@ -19,9 +19,10 @@ Kern Launcher replaces cluttered app grids with a clean, command-bar interface. 
 
 - **Fast App Launcher**: Instant fuzzy search with auto-launch capability.
 - **Deep Search Shortcuts**: Instant search into YouTube, Spotify, GitHub, Wikipedia, Reddit, X/Twitter, Play Store, and Google.
+- **System Settings Index**: Type `set <query>` (e.g. `set wifi`, `set battery`, `set display`) to query 25+ Android system settings pages directly.
 - **Configurable AI Command**: Type `ai <prompt>` to query your preferred AI provider (ChatGPT, Google Gemini, Perplexity, or Claude).
 - **Native Deep Link Support**: Execute custom URI schemes (e.g. `lazylogs://add?text=lunch%2025k`) or use the built-in `log <text>` financial tracking shortcut.
-- **Built-in Utilities**: Quick calculator (`calc 15*12`), timer alarm (`timer 20m`), app settings shortcut (`info <app>`), and app management (`hide <app>` / `unhide <app>`).
+- **Built-in Utilities**: Quick timer alarm (`timer 20m`), app settings shortcut (`info <app>`), and app management (`hide <app>` / `unhide <app>`).
 - **Deep Aesthetic Customization**:
   - **Wallpaper Passthrough**: Transparent background option with glassmorphism elements.
   - **Custom Theme Builder**: Full Hex color picker for Background, Primary Accent, and Text colors.
@@ -41,6 +42,7 @@ Kern Launcher replaces cluttered app grids with a clean, command-bar interface. 
 | Command / Input | Description | Example |
 | :--- | :--- | :--- |
 | **`<app_name>`** | Launch an installed application | `whatsapp` |
+| **`set <query>`** | Search 25+ System Settings pages | `set wifi` |
 | **`ai <prompt>`** | Query configured AI provider (ChatGPT / Gemini) | `ai explain relativity in 2 sentences` |
 | **`log <text>`** | Quick log entry to LazyLogs app | `log coffee 18000` |
 | **`<scheme>://...`** | Direct execute any custom App Deep Link URI | `lazylogs://add?text=lunch%2025k` |
@@ -53,7 +55,6 @@ Kern Launcher replaces cluttered app grids with a clean, command-bar interface. 
 | **`x <query>`** | Search tweets on X / Twitter (or launch app) | `x android 15` |
 | **`g <query>`** | Search web on Google Search | `g kotlin flow` |
 | **`maps <loc>`** | Search location on Google Maps | `maps jakarta` |
-| **`calc <expr>`** | Evaluate math expression | `calc 15*12` |
 | **`timer <time>`** | Set timer alarm | `timer 20m` |
 | **`info <app>`** | Open system Settings page for application | `info instagram` |
 | **`hide <app>`** | Hide application from search results | `hide games` |
