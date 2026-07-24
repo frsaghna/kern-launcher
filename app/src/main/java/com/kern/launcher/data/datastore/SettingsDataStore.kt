@@ -27,6 +27,7 @@ class SettingsDataStore(private val context: Context) {
         val SHOW_APP_ICONS = booleanPreferencesKey("show_app_icons")
         val AUTO_LAUNCH_SINGLE = booleanPreferencesKey("auto_launch_single")
         val TUI_VIEW_MODE = booleanPreferencesKey("tui_view_mode")
+        val SHOW_CLOCK = booleanPreferencesKey("show_clock")
         val CLOCK_24H = booleanPreferencesKey("clock_24h")
         val SHOW_DATE = booleanPreferencesKey("show_date")
         val AUTO_FOCUS_KEYBOARD = booleanPreferencesKey("auto_focus_keyboard")
@@ -54,6 +55,7 @@ class SettingsDataStore(private val context: Context) {
             showAppIcons = prefs[Keys.SHOW_APP_ICONS] ?: true,
             autoLaunchSingleMatch = prefs[Keys.AUTO_LAUNCH_SINGLE] ?: true,
             tuiViewMode = prefs[Keys.TUI_VIEW_MODE] ?: false,
+            showClock = prefs[Keys.SHOW_CLOCK] ?: true,
             clockFormat24h = prefs[Keys.CLOCK_24H] ?: true,
             showDate = prefs[Keys.SHOW_DATE] ?: true,
             autoFocusKeyboard = prefs[Keys.AUTO_FOCUS_KEYBOARD] ?: true,
@@ -111,6 +113,10 @@ class SettingsDataStore(private val context: Context) {
 
     suspend fun setTuiViewMode(enabled: Boolean) {
         context.dataStore.edit { prefs -> prefs[Keys.TUI_VIEW_MODE] = enabled }
+    }
+
+    suspend fun setShowClock(enabled: Boolean) {
+        context.dataStore.edit { prefs -> prefs[Keys.SHOW_CLOCK] = enabled }
     }
 
     suspend fun setClock24h(enabled: Boolean) {

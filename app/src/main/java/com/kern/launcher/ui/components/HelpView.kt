@@ -55,7 +55,7 @@ fun HelpDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "KERN MANUAL v1.0",
+                        text = "KERN MANUAL v1.0.1",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -75,7 +75,7 @@ fun HelpDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "BUILT-IN AI & DEEP SEARCH COMMANDS:",
+                    text = "LAUNCHER CONFIGURATION & SYSTEM:",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -84,28 +84,41 @@ fun HelpDialog(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                HelpItem("help / ?", "Display this manual")
-                HelpItem("set <query>", "Search 25+ System Settings (e.g. set wifi, set battery)")
+                HelpItem("settings / config / pref", "Open full Launcher Settings screen (configure themes, fonts, clock, & gestures)")
+                HelpItem("help / ?", "Display this help manual")
+                HelpItem("set <query>", "Search 25+ Android System Settings (e.g. set wifi, set battery, set dns)")
+                HelpItem("tui / tuiview", "Toggle experimental retro TUI Mode")
+                HelpItem("info <app>", "Open system settings page for an app")
+                HelpItem("hide <app>", "Hide app from launcher search results")
+                HelpItem("unhide <app>", "Restore hidden app back to search results")
+                HelpItem("hidden / secret", "View and manage all hidden applications")
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "SEARCH & DEEP LINK COMMANDS:",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
                 HelpItem("ai / gpt <prompt>", "Ask AI provider (e.g. ai jelaskan relativitas)")
-                HelpItem("log <text>", "Send text to LazyLogs (e.g. log makan siang 25k)")
+                HelpItem("maps <location>", "Search location or directions on Google Maps")
+                HelpItem("timer <duration>", "Set countdown timer alarm (e.g., timer 20m, 30s)")
+                HelpItem("log <text>", "Send text note to LazyLogs app")
                 HelpItem("<scheme>://...", "Direct execute any custom App Deep Link URI")
+                HelpItem("g <query>", "Search web on Google Search")
+                HelpItem("yt <query>", "Search videos on YouTube app")
                 HelpItem("spot / music <query>", "Search music on Spotify app")
                 HelpItem("play / store <query>", "Search apps on Play Store")
-                HelpItem("yt <query>", "Search videos on YouTube app")
                 HelpItem("gh <query>", "Search repositories on GitHub")
                 HelpItem("wiki <query>", "Search articles on Wikipedia")
                 HelpItem("reddit / r <query>", "Search posts/subreddits on Reddit")
                 HelpItem("x / tw <query>", "Search tweets on X / Twitter")
                 HelpItem("ddg <query>", "Search privacy web on DuckDuckGo")
-                HelpItem("g <query>", "Search web on Google Search")
-                HelpItem("maps <location>", "Search location on Google Maps")
-                HelpItem("info <app>", "Open system settings for app")
-                HelpItem("hide <app>", "Hide app from launcher search")
-                HelpItem("unhide <app>", "Restore hidden app to search")
-                HelpItem("hidden / secret", "View and manage all hidden applications")
-                HelpItem("tui / tuiview", "Toggle experimental retro TUI Mode")
-                HelpItem("timer <duration>", "Set timer alarm (e.g., timer 20m, 30s)")
-                HelpItem("settings", "Open launcher settings screen")
 
                 Spacer(modifier = Modifier.height(16.dp))
 

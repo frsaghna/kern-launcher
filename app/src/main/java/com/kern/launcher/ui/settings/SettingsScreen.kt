@@ -526,6 +526,13 @@ fun SettingsScreen(
                     )
 
                     SettingToggleRow(
+                        title = "Show Home Screen Clock",
+                        subtitle = "Display clock and date header on top of the home screen",
+                        checked = userSettings.showClock,
+                        onCheckedChange = { viewModel.toggleShowClock(it) }
+                    )
+
+                    SettingToggleRow(
                         title = "Use 24-Hour Clock Format",
                         subtitle = "Format clock time as 24h (14:30) vs 12h (2:30 PM)",
                         checked = userSettings.clockFormat24h,

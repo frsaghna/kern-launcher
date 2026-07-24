@@ -76,6 +76,10 @@ class SettingsViewModel(
         settingsDataStore.setTuiViewMode(enabled)
     }
 
+    fun toggleShowClock(enabled: Boolean) = viewModelScope.launch {
+        settingsDataStore.setShowClock(enabled)
+    }
+
     fun toggleClock24h(enabled: Boolean) = viewModelScope.launch {
         settingsDataStore.setClock24h(enabled)
     }

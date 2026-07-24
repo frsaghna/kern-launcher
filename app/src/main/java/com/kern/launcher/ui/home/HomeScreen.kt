@@ -132,23 +132,25 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.Start
             ) {
                 // Clock & Date Section
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = clockColumnAlign
-                ) {
-                    ClockView(
-                        is24Hour = userSettings.clockFormat24h,
-                        fontSizeOption = userSettings.clockFontSize,
-                        alignmentOption = userSettings.clockAlignment
-                    )
+                if (userSettings.showClock) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = clockColumnAlign
+                    ) {
+                        ClockView(
+                            is24Hour = userSettings.clockFormat24h,
+                            fontSizeOption = userSettings.clockFontSize,
+                            alignmentOption = userSettings.clockAlignment
+                        )
 
-                    if (userSettings.showDate) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        DateView(alignmentOption = userSettings.clockAlignment)
+                        if (userSettings.showDate) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            DateView(alignmentOption = userSettings.clockAlignment)
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
 
                 // Command Bar
                 CommandBar(

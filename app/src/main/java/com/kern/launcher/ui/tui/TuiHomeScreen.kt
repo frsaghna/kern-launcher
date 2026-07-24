@@ -181,34 +181,36 @@ fun TuiHomeScreen(
                 .padding(top = 2.dp)
         ) {
             // Ultra Minimal Raw Time & Date Header (Clickable Clock & Calendar)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = timeFormatter.format(currentDate),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    ),
-                    modifier = Modifier.clickable { IntentFactory.openClock(context) }
-                )
-                Text(
-                    text = " -- ",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                        fontSize = 12.sp
+            if (userSettings.showClock) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = timeFormatter.format(currentDate),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        ),
+                        modifier = Modifier.clickable { IntentFactory.openClock(context) }
                     )
-                )
-                Text(
-                    text = dateFormatter.format(currentDate).uppercase(),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                        fontSize = 12.sp
-                    ),
-                    modifier = Modifier.clickable { IntentFactory.openCalendar(context) }
-                )
-            }
+                    Text(
+                        text = " -- ",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                            fontSize = 12.sp
+                        )
+                    )
+                    Text(
+                        text = dateFormatter.format(currentDate).uppercase(),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                            fontSize = 12.sp
+                        ),
+                        modifier = Modifier.clickable { IntentFactory.openCalendar(context) }
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // Raw Shell Prompt
             Row(
@@ -216,7 +218,7 @@ fun TuiHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "> ",
+                    text = "kern:~ $ ",
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -268,7 +270,7 @@ fun TuiHomeScreen(
                         Box {
                             if (query.isEmpty()) {
                                 Text(
-                                    text = "type app or command...",
+                                    text = "type app name or 'help'...",
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
                                         fontSize = 18.sp

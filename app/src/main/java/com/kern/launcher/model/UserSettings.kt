@@ -12,6 +12,7 @@ data class UserSettings(
     val showAppIcons: Boolean = true,
     val autoLaunchSingleMatch: Boolean = true,
     val tuiViewMode: Boolean = false,
+    val showClock: Boolean = true,
     val clockFormat24h: Boolean = true,
     val showDate: Boolean = true,
     val autoFocusKeyboard: Boolean = true,

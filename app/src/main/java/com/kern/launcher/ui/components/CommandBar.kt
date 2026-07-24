@@ -143,7 +143,7 @@ fun CommandBar(
                     Box {
                         if (query.isEmpty()) {
                             Text(
-                                text = "Type help, set, app, maps, yt...",
+                                text = "Search apps or type 'help'...",
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
                                     fontSize = 16.sp
