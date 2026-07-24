@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,10 +39,14 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.kern.launcher.model.SearchResult
 import com.kern.launcher.service.intent.IntentFactory
 import com.kern.launcher.ui.components.HelpDialog
@@ -71,6 +76,8 @@ fun TuiHomeScreen(
     var showHelpDialog by remember { mutableStateOf(false) }
     var showHiddenAppsDialog by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     var currentDate by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) {
@@ -110,10 +117,17 @@ fun TuiHomeScreen(
         )
     }
 
-    LaunchedEffect(Unit) {
-        if (userSettings.autoFocusKeyboard) {
-            delay(150)
-            focusRequester.requestFocus()
+    // Re-focus and show soft keyboard every time screen unlocks or Activity resumes
+    DisposableEffect(lifecycleOwner, userSettings.autoFocusKeyboard) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && userSettings.autoFocusKeyboard) {
+                focusRequester.requestFocus()
+                keyboardController?.show()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
