@@ -22,7 +22,19 @@ android {
         }
     }
 
+    signingConfigs {
+        create("fixedDebug") {
+            storeFile = file("debug.jks")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("fixedDebug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
