@@ -42,7 +42,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -65,31 +64,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kern.launcher.ui.components.AliasManagerView
+import com.kern.launcher.model.Alias
 import com.kern.launcher.ui.components.AppPickerDialog
+import com.kern.launcher.ui.components.ColorPickerDialog
 import com.kern.launcher.ui.components.HelpDialog
-import com.kern.launcher.ui.components.HiddenAppsManagerView
-import com.kern.launcher.ui.theme.CyberpunkAccent
-import com.kern.launcher.ui.theme.CyberpunkBg
-import com.kern.launcher.ui.theme.DraculaAccent
-import com.kern.launcher.ui.theme.DraculaBg
-import com.kern.launcher.ui.theme.GruvboxAccent
-import com.kern.launcher.ui.theme.GruvboxBg
 import com.kern.launcher.ui.theme.KernDarkSurfaceBorder
 import com.kern.launcher.ui.theme.KernRed
 import com.kern.launcher.ui.theme.KernTextSecondary
-import com.kern.launcher.ui.theme.MonokaiAccent
-import com.kern.launcher.ui.theme.MonokaiBg
-import com.kern.launcher.ui.theme.NordAccent
-import com.kern.launcher.ui.theme.NordBg
-import com.kern.launcher.ui.theme.OledMonoAccent
-import com.kern.launcher.ui.theme.OledMonoBg
-import com.kern.launcher.ui.theme.OneDarkAccent
-import com.kern.launcher.ui.theme.OneDarkBg
-import com.kern.launcher.ui.theme.TokyoNightAccent
-import com.kern.launcher.ui.theme.TokyoNightBg
-import com.kern.launcher.ui.theme.VsCodeDarkAccent
-import com.kern.launcher.ui.theme.VsCodeDarkBg
 import com.kern.launcher.ui.theme.parseHexColor
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -100,15 +81,21 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val userSettings by viewModel.userSettings.collectAsState()
-    val aliases by viewModel.aliases.collectAsState()
-    val hiddenApps by viewModel.hiddenApps.collectAsState()
     val installedApps by viewModel.installedApps.collectAsState()
-
+    val aliases by viewModel.aliases.collectAsState()
     val context = LocalContext.current
+
+    var newAliasName by remember { mutableStateOf("") }
+    var newAliasTarget by remember { mutableStateOf("") }
+    var showHelpDialog by remember { mutableStateOf(false) }
+
+    // State for AppPickerDialog for Gestures
+    var pickingGestureSide by remember { mutableStateOf<String?>(null) } // "LEFT" or "RIGHT"
+
     val cardCorner = if (userSettings.sharpCorners) 0.dp else 12.dp
 
-    var showHelpDialog by remember { mutableStateOf(false) }
-    var pickingGestureSide by remember { mutableStateOf<String?>(null) }
+    val customBgParsed = parseHexColor(userSettings.customBgColor, Color(0xFF181825))
+    val customAccentParsed = parseHexColor(userSettings.customAccentColor, Color(0xFF00FF66))
 
     if (showHelpDialog) {
         HelpDialog(
@@ -141,115 +128,117 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Kern Settings",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        text = "KERN SETTINGS",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showHelpDialog = true }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.HelpOutline,
+                            contentDescription = "Manual",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Default Launcher Setting Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(cardCorner)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Home,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Set Kern as Default Launcher",
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = "Choose Kern as your primary home app",
-                            style = MaterialTheme.typography.bodyMedium.copy(color = KernTextSecondary, fontSize = 12.sp)
-                        )
-                    }
-                    Button(
-                        onClick = {
-                            val intent = Intent(Settings.ACTION_HOME_SETTINGS)
-                            context.startActivity(intent)
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(if (userSettings.sharpCorners) 0.dp else 8.dp)
-                    ) {
-                        Text("Set Default", fontSize = 12.sp)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Command Help Card
+            // General Launcher Preferences Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(cardCorner)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Home, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Launcher & System Defaults",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    SettingToggleRow(
+                        title = "Set Kern as Default Home Launcher",
+                        subtitle = "Open Android Settings to set Kern as default launcher",
+                        checked = false,
+                        showSwitch = false,
+                        onClick = {
+                            val intent = Intent(Settings.ACTION_HOME_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        }
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Command Manual & Help",
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = "View command syntax, shortcuts & aliases",
-                            style = MaterialTheme.typography.bodyMedium.copy(color = KernTextSecondary, fontSize = 12.sp)
-                        )
-                    }
-                    Button(
-                        onClick = { showHelpDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(if (userSettings.sharpCorners) 0.dp else 8.dp)
-                    ) {
-                        Text("Open Manual", fontSize = 12.sp)
-                    }
+
+                    SettingToggleRow(
+                        title = "Auto-launch Single Search Match",
+                        subtitle = "Open application immediately when search leaves only 1 result",
+                        checked = userSettings.autoLaunchSingleMatch,
+                        onCheckedChange = { viewModel.toggleAutoLaunchSingleMatch(it) }
+                    )
+
+                    SettingToggleRow(
+                        title = "Auto-Focus Search Keyboard",
+                        subtitle = "Open soft keyboard immediately when returning to Home screen",
+                        checked = userSettings.autoFocusKeyboard,
+                        onCheckedChange = { viewModel.toggleAutoFocusKeyboard(it) }
+                    )
+
+                    SettingToggleRow(
+                        title = "Show App Icons in Search List",
+                        subtitle = "Display app launcher icons next to search result text",
+                        checked = userSettings.showAppIcons,
+                        onCheckedChange = { viewModel.toggleShowAppIcons(it) }
+                    )
+
+                    SettingToggleRow(
+                        title = "Show List & Component Outlines",
+                        subtitle = "Render borders around search items & command input box",
+                        checked = userSettings.showAppListOutlines,
+                        onCheckedChange = { viewModel.toggleShowAppListOutlines(it) }
+                    )
+
+                    SettingToggleRow(
+                        title = "Wallpaper Passthrough (Transparent BG)",
+                        subtitle = "Make launcher background semi-transparent to view your system wallpaper",
+                        checked = userSettings.isTransparentBg,
+                        onCheckedChange = { viewModel.toggleTransparentBg(it) }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // AI Provider Selector Card
+            // AI Search Provider Preference Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth(),
@@ -267,27 +256,52 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Choose which AI app opens when typing 'ai <prompt>'",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = KernTextSecondary, fontSize = 12.sp)
+                        text = "Choose which AI assistant app/service is launched when using the 'ai' command:",
+                        style = MaterialTheme.typography.labelSmall.copy(color = KernTextSecondary, fontSize = 12.sp)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    val aiProviders = listOf(
+                        "CHATGPT" to "ChatGPT (OpenAI)",
+                        "GEMINI" to "Google Gemini",
+                        "PERPLEXITY" to "Perplexity AI",
+                        "CLAUDE" to "Claude (Anthropic)"
+                    )
 
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        FontOptionChip("ChatGPT (Default)", userSettings.aiProvider == "CHATGPT", userSettings.sharpCorners, { viewModel.setAiProvider("CHATGPT") })
-                        FontOptionChip("Google Gemini", userSettings.aiProvider == "GEMINI", userSettings.sharpCorners, { viewModel.setAiProvider("GEMINI") })
-                        FontOptionChip("Perplexity AI", userSettings.aiProvider == "PERPLEXITY", userSettings.sharpCorners, { viewModel.setAiProvider("PERPLEXITY") })
-                        FontOptionChip("Claude AI", userSettings.aiProvider == "CLAUDE", userSettings.sharpCorners, { viewModel.setAiProvider("CLAUDE") })
+                        aiProviders.forEach { (code, label) ->
+                            val isSelected = userSettings.aiProvider.equals(code, ignoreCase = true)
+                            val chipBg = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+                            val chipTextColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(if (userSettings.sharpCorners) 0.dp else 8.dp))
+                                    .background(chipBg)
+                                    .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else KernDarkSurfaceBorder, RoundedCornerShape(if (userSettings.sharpCorners) 0.dp else 8.dp))
+                                    .clickable { viewModel.setAiProvider(code) }
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = chipTextColor,
+                                        fontSize = 12.sp
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Palette Theme Picker Card
+            // Theme & Color Palette Selector Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth(),
@@ -298,43 +312,39 @@ fun SettingsScreen(
                         Icon(imageVector = Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Color Palettes",
+                            text = "Theme Color Palette",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val customBgParsed = parseHexColor(userSettings.customBgColor, Color(0xFF0D1117))
-                    val customAccentParsed = parseHexColor(userSettings.customAccentColor, Color(0xFF58A6FF))
-
                     val palettes = listOf(
-                        Triple("VS_CODE_DARK", "VS Code Dark+", VsCodeDarkBg to VsCodeDarkAccent),
-                        Triple("OLED_MONOCHROME", "OLED Mono", OledMonoBg to OledMonoAccent),
-                        Triple("DRACULA", "Dracula", DraculaBg to DraculaAccent),
-                        Triple("MONOKAI", "Monokai Pro", MonokaiBg to MonokaiAccent),
-                        Triple("ONE_DARK", "One Dark", OneDarkBg to OneDarkAccent),
-                        Triple("TOKYO_NIGHT", "Tokyo Night", TokyoNightBg to TokyoNightAccent),
-                        Triple("GRUVBOX", "Gruvbox", GruvboxBg to GruvboxAccent),
-                        Triple("NORD", "Nord", NordBg to NordAccent),
-                        Triple("CYBERPUNK", "Cyberpunk", CyberpunkBg to CyberpunkAccent),
+                        Triple("VSCODE_DARK", "VS Code Dark+", Color(0xFF1E1E1E) to Color(0xFF00FF66)),
+                        Triple("OLED_BLACK", "OLED Pitch Black", Color(0xFF000000) to Color(0xFF00E5FF)),
+                        Triple("DRACULA", "Dracula Cyber", Color(0xFF282A36) to Color(0xFFFF79C6)),
+                        Triple("MONOKAI_PRO", "Monokai Pro", Color(0xFF2D2A2E) to Color(0xFFFFD866)),
+                        Triple("ONE_DARK", "One Dark Pro", Color(0xFF21252B) to Color(0xFF61AFEF)),
+                        Triple("TOKYO_NIGHT", "Tokyo Night", Color(0xFF1A1B26) to Color(0xFF7AA2F7)),
+                        Triple("GRUVBOX_DARK", "Gruvbox Dark", Color(0xFF282828) to Color(0xFFB8BB26)),
+                        Triple("NORD", "Nord Minimal", Color(0xFF2E3440) to Color(0xFF88C0D0)),
+                        Triple("CYBERPUNK", "Cyberpunk Neon", Color(0xFF000B1E) to Color(0xFFFF0055)),
                         Triple("CUSTOM", "Custom Theme", customBgParsed to customAccentParsed)
                     )
 
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        palettes.forEach { (id, name, colors) ->
-                            val isSelected = userSettings.themePalette.equals(id, ignoreCase = true)
+                        palettes.forEach { (code, name, colors) ->
+                            val isSelected = userSettings.themePalette.equals(code, ignoreCase = true)
                             ThemeChip(
                                 label = name,
                                 bg = colors.first,
                                 accent = colors.second,
                                 isSelected = isSelected,
                                 sharpCorners = userSettings.sharpCorners,
-                                onClick = { viewModel.setThemePalette(id) }
+                                onClick = { viewModel.setThemePalette(code) }
                             )
                         }
                     }
@@ -409,42 +419,38 @@ fun SettingsScreen(
                         Icon(imageVector = Icons.Default.AlignHorizontalLeft, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Clock & App List Alignment (Normal Mode)",
+                            text = "Normal Mode Layout & Alignment",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("Clock Alignment", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(text = "Clock Header Alignment", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FontOptionChip("Left", userSettings.clockAlignment == "LEFT", userSettings.sharpCorners, { viewModel.setClockAlignment("LEFT") }, Modifier.weight(1f))
-                        FontOptionChip("Center", userSettings.clockAlignment == "CENTER", userSettings.sharpCorners, { viewModel.setClockAlignment("CENTER") }, Modifier.weight(1f))
-                        FontOptionChip("Right", userSettings.clockAlignment == "RIGHT", userSettings.sharpCorners, { viewModel.setClockAlignment("RIGHT") }, Modifier.weight(1f))
-                    }
+                    OptionSelectorRow(
+                        options = listOf("LEFT", "CENTER", "RIGHT"),
+                        currentSelected = userSettings.clockAlignment,
+                        sharpCorners = userSettings.sharpCorners,
+                        onSelect = { viewModel.setClockAlignment(it) }
+                    )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("App List Alignment", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(text = "App Search List Alignment", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FontOptionChip("Left", userSettings.appListAlignment == "LEFT", userSettings.sharpCorners, { viewModel.setAppListAlignment("LEFT") }, Modifier.weight(1f))
-                        FontOptionChip("Center", userSettings.appListAlignment == "CENTER", userSettings.sharpCorners, { viewModel.setAppListAlignment("CENTER") }, Modifier.weight(1f))
-                        FontOptionChip("Right", userSettings.appListAlignment == "RIGHT", userSettings.sharpCorners, { viewModel.setAppListAlignment("RIGHT") }, Modifier.weight(1f))
-                    }
+                    OptionSelectorRow(
+                        options = listOf("LEFT", "CENTER", "RIGHT"),
+                        currentSelected = userSettings.appListAlignment,
+                        sharpCorners = userSettings.sharpCorners,
+                        onSelect = { viewModel.setAppListAlignment(it) }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Font Sizes Card
+            // Font & Typography Preferences Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth(),
@@ -455,42 +461,70 @@ fun SettingsScreen(
                         Icon(imageVector = Icons.Default.FormatSize, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Font Sizes",
+                            text = "Typography & Font Sizes",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("Clock Font Size", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(text = "Font Family Style", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FontOptionChip("Small (48sp)", userSettings.clockFontSize == "SMALL", userSettings.sharpCorners, { viewModel.setClockFontSize("SMALL") }, Modifier.weight(1f))
-                        FontOptionChip("Medium (72sp)", userSettings.clockFontSize == "MEDIUM", userSettings.sharpCorners, { viewModel.setClockFontSize("MEDIUM") }, Modifier.weight(1f))
-                        FontOptionChip("Large (96sp)", userSettings.clockFontSize == "LARGE", userSettings.sharpCorners, { viewModel.setClockFontSize("LARGE") }, Modifier.weight(1f))
-                    }
+                    OptionSelectorRow(
+                        options = listOf("MONOSPACE", "SANS_SERIF", "SERIF", "CURSIVE", "DEFAULT"),
+                        currentSelected = userSettings.fontStyle,
+                        sharpCorners = userSettings.sharpCorners,
+                        onSelect = { viewModel.setFontStyle(it) }
+                    )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("App List Font Size", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Text(text = "Clock Display Size", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FontOptionChip("Small (13sp)", userSettings.appListFontSize == "SMALL", userSettings.sharpCorners, { viewModel.setAppListFontSize("SMALL") }, Modifier.weight(1f))
-                        FontOptionChip("Medium (15sp)", userSettings.appListFontSize == "MEDIUM", userSettings.sharpCorners, { viewModel.setAppListFontSize("MEDIUM") }, Modifier.weight(1f))
-                        FontOptionChip("Large (18sp)", userSettings.appListFontSize == "LARGE", userSettings.sharpCorners, { viewModel.setAppListFontSize("LARGE") }, Modifier.weight(1f))
-                    }
+                    OptionSelectorRow(
+                        options = listOf("SMALL", "MEDIUM", "LARGE"),
+                        currentSelected = userSettings.clockFontSize,
+                        sharpCorners = userSettings.sharpCorners,
+                        onSelect = { viewModel.setClockFontSize(it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(text = "App List Font Size", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OptionSelectorRow(
+                        options = listOf("SMALL", "MEDIUM", "LARGE"),
+                        currentSelected = userSettings.appListFontSize,
+                        sharpCorners = userSettings.sharpCorners,
+                        onSelect = { viewModel.setAppListFontSize(it) }
+                    )
+
+                    SettingToggleRow(
+                        title = "Sharp 0.dp Corners (Terminal Aesthetic)",
+                        subtitle = "Remove rounded corners from buttons, cards, and dialogs",
+                        checked = userSettings.sharpCorners,
+                        onCheckedChange = { viewModel.toggleSharpCorners(it) }
+                    )
+
+                    SettingToggleRow(
+                        title = "Use 24-Hour Clock Format",
+                        subtitle = "Format clock time as 24h (14:30) vs 12h (2:30 PM)",
+                        checked = userSettings.clockFormat24h,
+                        onCheckedChange = { viewModel.toggleClock24h(it) }
+                    )
+
+                    SettingToggleRow(
+                        title = "Display Date Subtitle",
+                        subtitle = "Show current day and date beneath clock display",
+                        checked = userSettings.showDate,
+                        onCheckedChange = { viewModel.toggleShowDate(it) }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Swipe Gestures Card
+            // Swipe Gestures Shortcut Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth(),
@@ -501,63 +535,38 @@ fun SettingsScreen(
                         Icon(imageVector = Icons.Default.Gesture, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Swipe Gesture Shortcuts",
+                            text = "Swipe Gestures App Shortcuts",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val leftApp = installedApps.find { it.packageName == userSettings.swipeLeftPackage }
-                    val rightApp = installedApps.find { it.packageName == userSettings.swipeRightPackage }
+                    // Swipe Left
+                    val leftAppLabel = installedApps.find { it.packageName == userSettings.swipeLeftPackage }?.label ?: if (userSettings.swipeLeftPackage.isBlank()) "None (Disabled)" else userSettings.swipeLeftPackage
+                    SettingToggleRow(
+                        title = "Swipe Left App: $leftAppLabel",
+                        subtitle = "Tap to choose app for left swipe gesture",
+                        checked = false,
+                        showSwitch = false,
+                        onClick = { pickingGestureSide = "LEFT" }
+                    )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Swipe Left App Shortcut", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                            Text(
-                                text = leftApp?.label ?: if (userSettings.swipeLeftPackage.isBlank()) "None (Tap to set)" else userSettings.swipeLeftPackage,
-                                style = MaterialTheme.typography.bodyMedium.copy(color = KernTextSecondary, fontSize = 12.sp)
-                            )
-                        }
-                        Button(
-                            onClick = { pickingGestureSide = "LEFT" },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(if (userSettings.sharpCorners) 0.dp else 8.dp)
-                        ) {
-                            Text("Select App", fontSize = 12.sp)
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Swipe Right App Shortcut", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                            Text(
-                                text = rightApp?.label ?: if (userSettings.swipeRightPackage.isBlank()) "None (Tap to set)" else userSettings.swipeRightPackage,
-                                style = MaterialTheme.typography.bodyMedium.copy(color = KernTextSecondary, fontSize = 12.sp)
-                            )
-                        }
-                        Button(
-                            onClick = { pickingGestureSide = "RIGHT" },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(if (userSettings.sharpCorners) 0.dp else 8.dp)
-                        ) {
-                            Text("Select App", fontSize = 12.sp)
-                        }
-                    }
+                    // Swipe Right
+                    val rightAppLabel = installedApps.find { it.packageName == userSettings.swipeRightPackage }?.label ?: if (userSettings.swipeRightPackage.isBlank()) "None (Disabled)" else userSettings.swipeRightPackage
+                    SettingToggleRow(
+                        title = "Swipe Right App: $rightAppLabel",
+                        subtitle = "Tap to choose app for right swipe gesture",
+                        checked = false,
+                        showSwitch = false,
+                        onClick = { pickingGestureSide = "RIGHT" }
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Font Selector Card
+            // Custom Aliases Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth(),
@@ -568,162 +577,163 @@ fun SettingsScreen(
                         Icon(imageVector = Icons.Default.TextFields, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Font Family Style",
+                            text = "Custom Command Aliases",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newAliasName,
+                            onValueChange = { newAliasName = it },
+                            placeholder = { Text("Alias (e.g. wa)", color = KernTextSecondary) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = KernDarkSurfaceBorder
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = newAliasTarget,
+                            onValueChange = { newAliasTarget = it },
+                            placeholder = { Text("Target (e.g. whatsapp)", color = KernTextSecondary) },
+                            modifier = Modifier.weight(1.5f),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = KernDarkSurfaceBorder
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            if (newAliasName.isNotBlank() && newAliasTarget.isNotBlank()) {
+                                viewModel.addAlias(newAliasName.trim(), newAliasTarget.trim())
+                                newAliasName = ""
+                                newAliasTarget = ""
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(cardCorner),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        FontOptionChip("JetBrains Mono (Raw)", userSettings.fontStyle == "MONOSPACE", userSettings.sharpCorners, { viewModel.setFontStyle("MONOSPACE") })
-                        FontOptionChip("Sans Serif", userSettings.fontStyle == "SANS_SERIF", userSettings.sharpCorners, { viewModel.setFontStyle("SANS_SERIF") })
-                        FontOptionChip("Serif", userSettings.fontStyle == "SERIF", userSettings.sharpCorners, { viewModel.setFontStyle("SERIF") })
-                        FontOptionChip("Cursive / Script", userSettings.fontStyle == "CURSIVE", userSettings.sharpCorners, { viewModel.setFontStyle("CURSIVE") })
-                        FontOptionChip("System Default", userSettings.fontStyle == "DEFAULT", userSettings.sharpCorners, { viewModel.setFontStyle("DEFAULT") })
+                        Text("ADD ALIAS", fontWeight = FontWeight.Bold)
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (aliases.isEmpty()) {
+                        Text(
+                            text = "No custom aliases added yet.",
+                            style = MaterialTheme.typography.bodySmall.copy(color = KernTextSecondary)
+                        )
+                    } else {
+                        aliases.forEach { alias ->
+                            AliasItemRow(
+                                alias = alias,
+                                onDelete = { viewModel.deleteAlias(alias.alias) }
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Toggles Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(cardCorner)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Raw UI & Preferences",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    SettingToggleItem(
-                        title = "Transparent Background (See Wallpaper)",
-                        subtitle = "Allow device wallpaper to show through launcher background",
-                        checked = userSettings.isTransparentBg,
-                        onCheckedChange = { viewModel.toggleTransparentBg(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "Show App List Square Outlines",
-                        subtitle = "Display border lines around app search result items",
-                        checked = userSettings.showAppListOutlines,
-                        onCheckedChange = { viewModel.toggleShowAppListOutlines(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "Experimental: TUI View Mode",
-                        subtitle = "ASCII retro terminal UI with framed window boxes",
-                        checked = userSettings.tuiViewMode,
-                        onCheckedChange = { viewModel.toggleTuiViewMode(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "Auto-launch Single Match App",
-                        subtitle = "Open application immediately when only 1 match remains",
-                        checked = userSettings.autoLaunchSingleMatch,
-                        onCheckedChange = { viewModel.toggleAutoLaunchSingleMatch(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "Sharp Corners (No Smooth Angle)",
-                        subtitle = "Square 0.dp box corners without rounding",
-                        checked = userSettings.sharpCorners,
-                        onCheckedChange = { viewModel.toggleSharpCorners(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "Show App Icons",
-                        subtitle = "Disable for pure text minimalist mode",
-                        checked = userSettings.showAppIcons,
-                        onCheckedChange = { viewModel.toggleShowAppIcons(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "Dark Mode",
-                        subtitle = "Use dark color scheme",
-                        checked = userSettings.isDarkMode,
-                        onCheckedChange = { viewModel.toggleDarkMode(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "24-Hour Clock Format",
-                        subtitle = "Use 24-hour time format (e.g., 21:30)",
-                        checked = userSettings.clockFormat24h,
-                        onCheckedChange = { viewModel.toggleClock24h(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "Show Date",
-                        subtitle = "Display day and date on home screen",
-                        checked = userSettings.showDate,
-                        onCheckedChange = { viewModel.toggleShowDate(it) }
-                    )
-
-                    SettingToggleItem(
-                        title = "Auto Focus Keyboard",
-                        subtitle = "Automatically open keyboard on home screen",
-                        checked = userSettings.autoFocusKeyboard,
-                        onCheckedChange = { viewModel.toggleAutoFocusKeyboard(it) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Hidden Apps Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(cardCorner)
-            ) {
-                HiddenAppsManagerView(
-                    hiddenApps = hiddenApps,
-                    onUnhideApp = { pkg -> viewModel.unhideApp(pkg) },
-                    sharpCorners = userSettings.sharpCorners,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Custom Aliases Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(cardCorner)
-            ) {
-                AliasManagerView(
-                    aliases = aliases,
-                    onAddAlias = { alias, target -> viewModel.addAlias(alias, target) },
-                    onDeleteAlias = { alias -> viewModel.deleteAlias(alias) },
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Clear History Button
-            OutlinedButton(
-                onClick = { viewModel.clearHistory() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = KernRed),
-                shape = RoundedCornerShape(cardCorner)
-            ) {
-                Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = KernRed)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Clear Command History", fontWeight = FontWeight.Bold)
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun SettingToggleRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    showSwitch: Boolean = true,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
+    onClick: (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (onClick != null) onClick()
+                else onCheckedChange?.invoke(!checked)
+            }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall.copy(color = KernTextSecondary, fontSize = 11.sp)
+            )
+        }
+        if (showSwitch) {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.surface,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = KernTextSecondary,
+                    uncheckedTrackColor = KernDarkSurfaceBorder
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun OptionSelectorRow(
+    options: List<String>,
+    currentSelected: String,
+    sharpCorners: Boolean,
+    onSelect: (String) -> Unit
+) {
+    val cornerRadius = if (sharpCorners) 0.dp else 8.dp
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        options.forEach { option ->
+            val isSelected = currentSelected.equals(option, ignoreCase = true)
+            val bg = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+            val textCol = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(cornerRadius))
+                    .background(bg)
+                    .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else KernDarkSurfaceBorder, RoundedCornerShape(cornerRadius))
+                    .clickable { onSelect(option) }
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = option.uppercase(),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = textCol,
+                        fontSize = 11.sp
+                    )
+                )
+            }
         }
     }
 }
@@ -738,10 +748,42 @@ fun ColorPickerSection(
     onColorChanged: (String) -> Unit
 ) {
     var textValue by remember(currentColorHex) { mutableStateOf(currentColorHex) }
+    var showColorPickerModal by remember { mutableStateOf(false) }
     val parsedColor = parseHexColor(textValue, Color.Gray)
 
+    if (showColorPickerModal) {
+        ColorPickerDialog(
+            title = title,
+            initialColorHex = textValue,
+            sharpCorners = sharpCorners,
+            onColorSelected = { selectedHex ->
+                textValue = selectedHex
+                onColorChanged(selectedHex)
+            },
+            onDismiss = { showColorPickerModal = false }
+        )
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = title, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = "PICK VISUAL",
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable { showColorPickerModal = true }
+            )
+        }
+
         Spacer(modifier = Modifier.height(6.dp))
 
         Row(
@@ -754,6 +796,7 @@ fun ColorPickerSection(
                     .clip(RoundedCornerShape(if (sharpCorners) 0.dp else 8.dp))
                     .background(parsedColor)
                     .border(1.dp, KernDarkSurfaceBorder, RoundedCornerShape(if (sharpCorners) 0.dp else 8.dp))
+                    .clickable { showColorPickerModal = true }
             )
 
             OutlinedTextField(
@@ -770,7 +813,16 @@ fun ColorPickerSection(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = KernDarkSurfaceBorder
-                )
+                ),
+                trailingIcon = {
+                    IconButton(onClick = { showColorPickerModal = true }) {
+                        Icon(
+                            imageVector = Icons.Default.ColorLens,
+                            contentDescription = "Pick Color",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             )
         }
 
@@ -807,60 +859,36 @@ fun ThemeChip(
     sharpCorners: Boolean,
     onClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) accent else KernDarkSurfaceBorder
-    val shape = RoundedCornerShape(if (sharpCorners) 0.dp else 8.dp)
+    val cornerRadius = if (sharpCorners) 0.dp else 8.dp
 
     Row(
         modifier = Modifier
-            .clip(shape)
-            .background(bg)
-            .border(if (isSelected) 2.dp else 1.dp, borderColor, shape)
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface)
+            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else KernDarkSurfaceBorder, RoundedCornerShape(cornerRadius))
             .clickable { onClick() }
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(12.dp)
+                .size(16.dp)
+                .clip(CircleShape)
+                .background(bg)
+                .border(1.dp, KernDarkSurfaceBorder, CircleShape)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Box(
+            modifier = Modifier
+                .size(16.dp)
                 .clip(CircleShape)
                 .background(accent)
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = Color.White,
-                fontSize = 11.sp
-            )
-        )
-    }
-}
-
-@Composable
-fun FontOptionChip(
-    label: String,
-    isSelected: Boolean,
-    sharpCorners: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else KernDarkSurfaceBorder
-    val shape = RoundedCornerShape(if (sharpCorners) 0.dp else 8.dp)
-
-    Box(
-        modifier = modifier
-            .clip(shape)
-            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface)
-            .border(1.dp, borderColor, shape)
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
                 fontSize = 11.sp
             )
@@ -869,35 +897,30 @@ fun FontOptionChip(
 }
 
 @Composable
-fun SettingToggleItem(
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+fun AliasItemRow(
+    alias: Alias,
+    onDelete: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium.copy(color = KernTextSecondary, fontSize = 12.sp)
+        Text(
+            text = "${alias.alias} ➔ ${alias.targetCommandOrPackage}",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            ),
+            modifier = Modifier.weight(1f)
+        )
+        IconButton(onClick = onDelete) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete Alias",
+                tint = KernRed
             )
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.background,
-                checkedTrackColor = MaterialTheme.colorScheme.primary
-            )
-        )
     }
 }
