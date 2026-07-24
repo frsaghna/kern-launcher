@@ -35,12 +35,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val userSettings by homeViewModel.userSettings.collectAsState()
+            val query by homeViewModel.query.collectAsState()
 
             KernTheme(userSettings = userSettings) {
                 var currentScreen by remember { mutableStateOf(Screen.HOME) }
 
-                BackHandler(enabled = currentScreen == Screen.SETTINGS) {
-                    currentScreen = Screen.HOME
+                BackHandler(enabled = true) {
+                    if (currentScreen == Screen.SETTINGS) {
+                        currentScreen = Screen.HOME
+                    } else {
+                        if (query.isNotEmpty()) {
+                            homeViewModel.onQueryChange("")
+                        } else {
+                            // Consumed on Home screen - prevents Activity from restarting or finishing
+                        }
+                    }
                 }
 
                 when (currentScreen) {
