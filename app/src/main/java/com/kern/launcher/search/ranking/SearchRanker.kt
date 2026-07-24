@@ -11,7 +11,7 @@ object SearchRanker {
         if (q.isEmpty()) {
             val usageBonus = app.usageCount * 10.0
             val recencyBonus = if (app.lastUsedTime > 0) {
-                val hoursAgo = (System.currentTimeMillis() - app.lastUsedTime) / (1000 * 3600.0)
+                val hoursAgo = ((System.currentTimeMillis() - app.lastUsedTime) / (1000 * 3600)).coerceAtLeast(0)
                 (100.0 / (hoursAgo + 1.0))
             } else 0.0
             return usageBonus + recencyBonus
@@ -19,7 +19,6 @@ object SearchRanker {
 
         var matchScore = 0.0
 
-        // Only query against human-readable app label, never package name (e.g. com.blabla)
         when {
             label == q -> matchScore = 1000.0
             label.startsWith(q) -> matchScore = 800.0 - (label.length - q.length)
@@ -30,7 +29,7 @@ object SearchRanker {
 
         val usageScore = app.usageCount * 5.0
         val recencyScore = if (app.lastUsedTime > 0) {
-            val hoursAgo = (System.currentTimeMillis() - app.lastUsedTime) / (1000 * 3600.0)
+            val hoursAgo = ((System.currentTimeMillis() - app.lastUsedTime) / (1000 * 3600)).coerceAtLeast(0)
             (50.0 / (hoursAgo + 1.0))
         } else 0.0
 

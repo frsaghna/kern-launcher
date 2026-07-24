@@ -3,7 +3,8 @@ package com.kern.launcher.ui.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -94,22 +95,32 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .pointerInput(userSettings.swipeLeftPackage, userSettings.swipeRightPackage) {
-                    var totalDragX = 0f
-                    detectHorizontalDragGestures(
-                        onDragEnd = {
-                            if (totalDragX < -120f && userSettings.swipeLeftPackage.isNotBlank()) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        var change = down
+                        var totalX = 0f
+                        var totalY = 0f
+
+                        while (change.pressed) {
+                            val event = awaitPointerEvent()
+                            val current = event.changes.firstOrNull() ?: break
+                            val delta = current.position - current.previousPosition
+                            totalX += delta.x
+                            totalY += delta.y
+                            change = current
+                        }
+
+                        // Only trigger gesture if horizontal drag is dominant (pure horizontal swipe)
+                        if (kotlin.math.abs(totalX) > 150f && kotlin.math.abs(totalX) > kotlin.math.abs(totalY) * 2.5f) {
+                            if (totalX < -150f && userSettings.swipeLeftPackage.isNotBlank()) {
                                 val intent = context.packageManager.getLaunchIntentForPackage(userSettings.swipeLeftPackage)
                                 if (intent != null) context.startActivity(intent)
-                            } else if (totalDragX > 120f && userSettings.swipeRightPackage.isNotBlank()) {
+                            } else if (totalX > 150f && userSettings.swipeRightPackage.isNotBlank()) {
                                 val intent = context.packageManager.getLaunchIntentForPackage(userSettings.swipeRightPackage)
                                 if (intent != null) context.startActivity(intent)
                             }
-                            totalDragX = 0f
-                        },
-                        onHorizontalDrag = { _, dragAmount ->
-                            totalDragX += dragAmount
                         }
-                    )
+                    }
                 }
                 .padding(horizontal = 24.dp)
         ) {
