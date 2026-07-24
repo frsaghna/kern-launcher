@@ -71,6 +71,7 @@ import com.kern.launcher.ui.components.HelpDialog
 import com.kern.launcher.ui.theme.KernDarkSurfaceBorder
 import com.kern.launcher.ui.theme.KernRed
 import com.kern.launcher.ui.theme.KernTextSecondary
+import com.kern.launcher.ui.theme.MONKEYTYPE_PALETTES
 import com.kern.launcher.ui.theme.parseHexColor
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -88,6 +89,7 @@ fun SettingsScreen(
     var newAliasName by remember { mutableStateOf("") }
     var newAliasTarget by remember { mutableStateOf("") }
     var showHelpDialog by remember { mutableStateOf(false) }
+    var themeSearchQuery by remember { mutableStateOf("") }
 
     // State for AppPickerDialog for Gestures
     var pickingGestureSide by remember { mutableStateOf<String?>(null) } // "LEFT" or "RIGHT"
@@ -312,34 +314,49 @@ fun SettingsScreen(
                         Icon(imageVector = Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Theme Color Palette",
+                            text = "Monkeytype & Custom Themes (${MONKEYTYPE_PALETTES.size + 1})",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = themeSearchQuery,
+                        onValueChange = { themeSearchQuery = it },
+                        placeholder = { Text("Filter theme (e.g. serika, botanical, matrix)...", color = KernTextSecondary, fontSize = 12.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(if (userSettings.sharpCorners) 0.dp else 8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = KernDarkSurfaceBorder
+                        )
+                    )
+
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val palettes = listOf(
-                        Triple("VSCODE_DARK", "VS Code Dark+", Color(0xFF1E1E1E) to Color(0xFF00FF66)),
-                        Triple("OLED_BLACK", "OLED Pitch Black", Color(0xFF000000) to Color(0xFF00E5FF)),
-                        Triple("DRACULA", "Dracula Cyber", Color(0xFF282A36) to Color(0xFFFF79C6)),
-                        Triple("MONOKAI_PRO", "Monokai Pro", Color(0xFF2D2A2E) to Color(0xFFFFD866)),
-                        Triple("ONE_DARK", "One Dark Pro", Color(0xFF21252B) to Color(0xFF61AFEF)),
-                        Triple("TOKYO_NIGHT", "Tokyo Night", Color(0xFF1A1B26) to Color(0xFF7AA2F7)),
-                        Triple("GRUVBOX_DARK", "Gruvbox Dark", Color(0xFF282828) to Color(0xFFB8BB26)),
-                        Triple("NORD", "Nord Minimal", Color(0xFF2E3440) to Color(0xFF88C0D0)),
-                        Triple("CYBERPUNK", "Cyberpunk Neon", Color(0xFF000B1E) to Color(0xFFFF0055)),
-                        Triple("CUSTOM", "Custom Theme", customBgParsed to customAccentParsed)
-                    )
+                    val allPalettes = listOf("CUSTOM" to (customBgParsed to customAccentParsed)) +
+                            MONKEYTYPE_PALETTES.map { (code, palette) -> code to (palette.bg to palette.accent) }
+
+                    val filteredPalettes = if (themeSearchQuery.isBlank()) {
+                        allPalettes
+                    } else {
+                        allPalettes.filter { (code, _) ->
+                            code.lowercase().contains(themeSearchQuery.trim().lowercase()) ||
+                                    code.replace("_", " ").lowercase().contains(themeSearchQuery.trim().lowercase())
+                        }
+                    }
 
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        palettes.forEach { (code, name, colors) ->
+                        filteredPalettes.forEach { (code, colors) ->
                             val isSelected = userSettings.themePalette.equals(code, ignoreCase = true)
+                            val labelName = code.replace("_", " ").lowercase().split(" ").joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
                             ThemeChip(
-                                label = name,
+                                label = labelName,
                                 bg = colors.first,
                                 accent = colors.second,
                                 isSelected = isSelected,
