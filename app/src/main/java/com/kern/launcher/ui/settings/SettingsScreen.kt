@@ -316,7 +316,7 @@ fun SettingsScreen(
                         Icon(imageVector = Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Monkeytype & Custom Themes (${MONKEYTYPE_PALETTES.size + 1})",
+                            text = "Themes (${MONKEYTYPE_PALETTES.size + 1})",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
