@@ -5,6 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import com.kern.launcher.data.room.dao.AppUsageDao
 import com.kern.launcher.data.room.entity.AppUsageEntity
 import com.kern.launcher.model.AppInfo
@@ -79,16 +83,34 @@ class AppRepository(
             val packageName = resolveInfo.activityInfo.packageName
             val activityName = resolveInfo.activityInfo.name
             val label = resolveInfo.loadLabel(packageManager).toString()
-            val icon = resolveInfo.loadIcon(packageManager)
+            val drawableIcon = try {
+                resolveInfo.loadIcon(packageManager)
+            } catch (e: Exception) {
+                null
+            }
+
+            val iconBitmap = drawableIcon?.toImageBitmap(96)
 
             if (packageName.isBlank()) null
             else AppInfo(
                 packageName = packageName,
                 activityName = activityName,
                 label = label,
-                icon = icon
+                iconBitmap = iconBitmap
             )
         }.distinctBy { it.packageName }
+    }
+
+    private fun Drawable.toImageBitmap(size: Int = 96): ImageBitmap? {
+        return try {
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+            setBounds(0, 0, size, size)
+            draw(canvas)
+            bitmap.asImageBitmap()
+        } catch (e: Exception) {
+            null
+        }
     }
 
     suspend fun incrementAppUsage(packageName: String, activityName: String) = withContext(Dispatchers.IO) {

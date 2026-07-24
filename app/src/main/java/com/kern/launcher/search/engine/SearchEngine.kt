@@ -72,7 +72,7 @@ class SearchEngine {
                     type = SearchResultType.APP,
                     title = app.label,
                     subtitle = "",
-                    icon = app.icon,
+                    iconBitmap = app.iconBitmap,
                     actionCommand = Command.AppLaunch(app),
                     score = score
                 )
@@ -200,7 +200,7 @@ class SearchEngine {
                         type = SearchResultType.BUILTIN_COMMAND,
                         title = "App Info: ${app.label}",
                         subtitle = "Open system settings for ${app.label}",
-                        icon = app.icon,
+                        iconBitmap = app.iconBitmap,
                         actionCommand = Command.AppInfoSettings(app.packageName, app.label),
                         score = 2300.0
                     )
@@ -221,7 +221,7 @@ class SearchEngine {
                         type = SearchResultType.BUILTIN_COMMAND,
                         title = "Hide App: ${app.label}",
                         subtitle = "Hide application from search",
-                        icon = app.icon,
+                        iconBitmap = app.iconBitmap,
                         actionCommand = Command.HideApp(app),
                         score = 2200.0
                     )
@@ -242,7 +242,7 @@ class SearchEngine {
                         type = SearchResultType.BUILTIN_COMMAND,
                         title = "Unhide App: ${app.label}",
                         subtitle = "Make application visible in search again",
-                        icon = app.icon,
+                        iconBitmap = app.iconBitmap,
                         actionCommand = Command.UnhideApp(app.packageName, app.label),
                         score = 2200.0
                     )
@@ -443,7 +443,7 @@ class SearchEngine {
                     type = SearchResultType.APP,
                     title = app.label,
                     subtitle = "",
-                    icon = app.icon,
+                    iconBitmap = app.iconBitmap,
                     actionCommand = Command.AppLaunch(app),
                     score = score
                 )

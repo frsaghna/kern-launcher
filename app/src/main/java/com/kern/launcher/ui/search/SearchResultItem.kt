@@ -27,17 +27,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
 import com.kern.launcher.model.Command
 import com.kern.launcher.model.SearchResult
 import com.kern.launcher.model.SearchResultType
@@ -136,13 +133,11 @@ fun SearchResultItem(
 @Composable
 fun SearchResultIcon(result: SearchResult, sharpCorners: Boolean) {
     val cornerRadius = if (sharpCorners) 0.dp else 6.dp
-    val bitmap = remember(result.icon) {
-        result.icon?.toBitmap(48, 48)?.asImageBitmap()
-    }
+    val iconBitmap = result.iconBitmap
 
-    if (bitmap != null) {
+    if (iconBitmap != null) {
         Image(
-            bitmap = bitmap,
+            bitmap = iconBitmap,
             contentDescription = result.title,
             modifier = Modifier
                 .size(32.dp)

@@ -1,6 +1,6 @@
 package com.kern.launcher.model
 
-import android.graphics.drawable.Drawable
+import androidx.compose.ui.graphics.ImageBitmap
 
 enum class SearchResultType {
     APP,
@@ -15,7 +15,7 @@ data class SearchResult(
     val type: SearchResultType,
     val title: String,
     val subtitle: String,
-    val icon: Drawable? = null,
+    val iconBitmap: ImageBitmap? = null,
     val actionCommand: Command,
     val score: Double = 0.0
 )

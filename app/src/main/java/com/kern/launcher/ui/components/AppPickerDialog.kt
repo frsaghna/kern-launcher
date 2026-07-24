@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +40,6 @@ import com.kern.launcher.model.Command
 import com.kern.launcher.model.SearchResult
 import com.kern.launcher.model.SearchResultType
 import com.kern.launcher.ui.search.SearchResultIcon
-import com.kern.launcher.ui.theme.KernDarkSurfaceBorder
 import com.kern.launcher.ui.theme.KernTextSecondary
 
 @Composable
@@ -48,15 +48,15 @@ fun AppPickerDialog(
     apps: List<AppInfo>,
     sharpCorners: Boolean,
     onAppSelected: (String) -> Unit,
-    onClear: () -> Unit,
+    onClear: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
     val cornerRadius = if (sharpCorners) 0.dp else 12.dp
     var searchQuery by remember { mutableStateOf("") }
 
-    val filteredApps = remember(apps, searchQuery) {
+    val filteredApps = remember(searchQuery, apps) {
         if (searchQuery.isBlank()) apps
-        else apps.filter { it.label.contains(searchQuery, ignoreCase = true) }
+        else apps.filter { it.label.contains(searchQuery, ignoreCase = true) || it.packageName.contains(searchQuery, ignoreCase = true) }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -67,7 +67,9 @@ fun AppPickerDialog(
                 .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(cornerRadius)),
             color = MaterialTheme.colorScheme.surface
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = title.uppercase(),
@@ -92,10 +94,13 @@ fun AppPickerDialog(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search app...", fontSize = 14.sp) },
-                    singleLine = true,
+                    placeholder = { Text("Filter applications...", color = KernTextSecondary) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(if (sharpCorners) 0.dp else 8.dp)
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -103,7 +108,7 @@ fun AppPickerDialog(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(240.dp)
+                        .height(300.dp)
                 ) {
                     items(filteredApps, key = { it.packageName }) { app ->
                         Row(
@@ -122,7 +127,7 @@ fun AppPickerDialog(
                                     type = SearchResultType.APP,
                                     title = app.label,
                                     subtitle = "",
-                                    icon = app.icon,
+                                    iconBitmap = app.iconBitmap,
                                     actionCommand = Command.AppLaunch(app)
                                 ),
                                 sharpCorners = sharpCorners
@@ -147,11 +152,11 @@ fun AppPickerDialog(
                             onClear()
                             onDismiss()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = KernDarkSurfaceBorder),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                         shape = RoundedCornerShape(cornerRadius),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("CLEAR SHORTCUT", fontSize = 12.sp, color = KernTextSecondary)
+                        Text("CLEAR SHORTCUT", fontWeight = FontWeight.Bold)
                     }
                 }
             }
