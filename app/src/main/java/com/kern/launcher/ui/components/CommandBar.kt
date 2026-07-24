@@ -23,8 +23,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -99,17 +101,19 @@ fun CommandBar(
                     .weight(1f)
                     .focusRequester(focusRequester)
                     .onKeyEvent { keyEvent ->
-                        when (keyEvent.key) {
-                            Key.DirectionUp -> {
-                                onNavigateHistoryUp()
-                                true
+                        if (keyEvent.type == KeyEventType.KeyDown) {
+                            when (keyEvent.key) {
+                                Key.DirectionUp -> {
+                                    onNavigateHistoryUp()
+                                    true
+                                }
+                                Key.DirectionDown -> {
+                                    onNavigateHistoryDown()
+                                    true
+                                }
+                                else -> false
                             }
-                            Key.DirectionDown -> {
-                                onNavigateHistoryDown()
-                                true
-                            }
-                            else -> false
-                        }
+                        } else false
                     },
                 textStyle = MaterialTheme.typography.titleMedium.copy(
                     color = MaterialTheme.colorScheme.onBackground,

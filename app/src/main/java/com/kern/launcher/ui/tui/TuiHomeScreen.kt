@@ -35,8 +35,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -236,21 +238,23 @@ fun TuiHomeScreen(
                         .weight(1f)
                         .focusRequester(focusRequester)
                         .onKeyEvent { keyEvent ->
-                            when (keyEvent.key) {
-                                Key.Enter, Key.NumPadEnter -> {
-                                    onExecuteCurrent()
-                                    true
+                            if (keyEvent.type == KeyEventType.KeyDown) {
+                                when (keyEvent.key) {
+                                    Key.Enter, Key.NumPadEnter -> {
+                                        onExecuteCurrent()
+                                        true
+                                    }
+                                    Key.DirectionUp -> {
+                                        viewModel.navigateHistoryUp()
+                                        true
+                                    }
+                                    Key.DirectionDown -> {
+                                        viewModel.navigateHistoryDown()
+                                        true
+                                    }
+                                    else -> false
                                 }
-                                Key.DirectionUp -> {
-                                    viewModel.navigateHistoryUp()
-                                    true
-                                }
-                                Key.DirectionDown -> {
-                                    viewModel.navigateHistoryDown()
-                                    true
-                                }
-                                else -> false
-                            }
+                            } else false
                         },
                     decorationBox = { innerTextField ->
                         Box {
@@ -285,7 +289,10 @@ fun TuiHomeScreen(
 
             // Pure Text Results List (fzf / dmenu style)
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                itemsIndexed(searchResults, key = { _, item -> item.id }) { index, item ->
+                itemsIndexed(
+                    items = searchResults,
+                    key = { index, item -> "${item.id}_$index" }
+                ) { index, item ->
                     val isSelected = index == selectedIndex
                     RawSearchResultRow(
                         result = item,
