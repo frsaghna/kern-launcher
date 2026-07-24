@@ -105,7 +105,7 @@ fun HelpDialog(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                HelpItem("ai / gpt <prompt>", "Ask AI provider (e.g. ai jelaskan relativitas)")
+                HelpItem("ai <prompt>", "Ask AI provider (e.g. ai jelaskan relativitas)")
                 HelpItem("maps <location>", "Search location or directions on Google Maps")
                 HelpItem("timer <duration>", "Set countdown timer alarm (e.g., timer 20m, 30s)")
                 HelpItem("log <text>", "Send text note to LazyLogs app")
