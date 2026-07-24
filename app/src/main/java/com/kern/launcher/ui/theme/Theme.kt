@@ -78,39 +78,55 @@ fun parseHexColor(hex: String, fallback: Color): Color {
 @Composable
 fun getThemeColorScheme(palette: String, userSettings: UserSettings = UserSettings()): ColorScheme {
     val key = palette.uppercase()
-    if (key == "CUSTOM") {
-        val customBg = parseHexColor(userSettings.customBgColor, Color(0xFF0D1117))
-        val customAccent = parseHexColor(userSettings.customAccentColor, Color(0xFF58A6FF))
-        val customText = parseHexColor(userSettings.customTextColor, Color(0xFFC9D1D9))
-        return darkColorScheme(
-            primary = customAccent,
-            secondary = customAccent,
-            background = customBg,
-            surface = customBg.copy(alpha = 0.85f),
-            onBackground = customText,
-            onSurface = customText
+    val (bg, accent, text) = if (key == "CUSTOM") {
+        Triple(
+            parseHexColor(userSettings.customBgColor, Color(0xFF0D1117)),
+            parseHexColor(userSettings.customAccentColor, Color(0xFF58A6FF)),
+            parseHexColor(userSettings.customTextColor, Color(0xFFC9D1D9))
         )
+    } else {
+        val theme = MONKEYTYPE_PALETTES[key] ?: MONKEYTYPE_PALETTES["SERIKA_DARK"] ?: PaletteColors(Color(0xFF323437), Color(0xFFE2B714), Color(0xFFD1D0C5))
+        Triple(theme.bg, theme.accent, theme.text)
     }
 
-    val theme = MONKEYTYPE_PALETTES[key] ?: MONKEYTYPE_PALETTES["SERIKA_DARK"] ?: PaletteColors(Color(0xFF323437), Color(0xFFE2B714), Color(0xFFD1D0C5))
+    val onVariantText = text.copy(alpha = 0.7f)
+    val surfaceColor = bg.copy(alpha = 0.9f)
+
     return darkColorScheme(
-        primary = theme.accent,
-        secondary = theme.accent,
-        background = theme.bg,
-        surface = theme.bg.copy(alpha = 0.85f),
-        onBackground = theme.text,
-        onSurface = theme.text
+        primary = accent,
+        onPrimary = bg,
+        primaryContainer = accent.copy(alpha = 0.2f),
+        onPrimaryContainer = accent,
+        secondary = accent,
+        onSecondary = bg,
+        secondaryContainer = accent.copy(alpha = 0.15f),
+        onSecondaryContainer = accent,
+        tertiary = accent,
+        onTertiary = bg,
+        background = bg,
+        onBackground = text,
+        surface = surfaceColor,
+        onSurface = text,
+        surfaceVariant = surfaceColor,
+        onSurfaceVariant = onVariantText,
+        outline = accent.copy(alpha = 0.4f),
+        outlineVariant = accent.copy(alpha = 0.2f),
+        scrim = Color.Black
     )
 }
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF00FF66),
+    onPrimary = Color(0xFF000000),
     secondary = Color(0xFF00FF66),
+    onSecondary = Color(0xFF000000),
     background = Color(0xFFF8F9FA),
-    surface = Color(0xFFFFFFFF),
-    onPrimary = Color(0xFFF8F9FA),
     onBackground = Color(0xFF212529),
-    onSurface = Color(0xFF212529)
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF212529),
+    surfaceVariant = Color(0xFFE9ECEF),
+    onSurfaceVariant = Color(0xFF495057),
+    outline = Color(0xFFCED4DA)
 )
 
 @Composable

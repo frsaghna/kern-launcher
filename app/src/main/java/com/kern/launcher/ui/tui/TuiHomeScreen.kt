@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,9 +55,8 @@ import com.kern.launcher.service.intent.IntentFactory
 import com.kern.launcher.ui.components.HelpDialog
 import com.kern.launcher.ui.components.HiddenAppsDialog
 import com.kern.launcher.ui.home.HomeViewModel
-import com.kern.launcher.ui.theme.KernTextMuted
-import com.kern.launcher.ui.theme.KernTextSecondary
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -80,6 +80,7 @@ fun TuiHomeScreen(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
 
     var currentDate by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) {
@@ -119,12 +120,19 @@ fun TuiHomeScreen(
         )
     }
 
-    // Re-focus and show soft keyboard every time screen unlocks or Activity resumes
+    // Safe Re-focus and show soft keyboard when screen unlocks or Activity resumes
     DisposableEffect(lifecycleOwner, userSettings.autoFocusKeyboard) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME && userSettings.autoFocusKeyboard) {
-                focusRequester.requestFocus()
-                keyboardController?.show()
+                coroutineScope.launch {
+                    delay(100)
+                    try {
+                        focusRequester.requestFocus()
+                        keyboardController?.show()
+                    } catch (e: Exception) {
+                        // Safe catch for composition focus race conditions
+                    }
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -186,14 +194,14 @@ fun TuiHomeScreen(
                 Text(
                     text = " -- ",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = KernTextSecondary,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                         fontSize = 12.sp
                     )
                 )
                 Text(
                     text = dateFormatter.format(currentDate).uppercase(),
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = KernTextSecondary,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                         fontSize = 12.sp
                     ),
                     modifier = Modifier.clickable { IntentFactory.openCalendar(context) }
@@ -262,7 +270,7 @@ fun TuiHomeScreen(
                                 Text(
                                     text = "type app or command...",
                                     style = MaterialTheme.typography.bodyLarge.copy(
-                                        color = KernTextMuted,
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
                                         fontSize = 18.sp
                                     )
                                 )
@@ -279,7 +287,7 @@ fun TuiHomeScreen(
             Text(
                 text = "----------------------------------------------------------------",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = KernTextMuted,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
                     fontSize = 10.sp
                 ),
                 maxLines = 1
@@ -353,7 +361,7 @@ fun RawSearchResultRow(
             Text(
                 text = result.subtitle,
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = KernTextSecondary,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     fontSize = 11.sp
                 )
             )

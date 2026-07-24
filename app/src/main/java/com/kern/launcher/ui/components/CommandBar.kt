@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +37,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kern.launcher.ui.theme.KernDarkSurfaceBorder
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun CommandBar(
@@ -53,14 +56,22 @@ fun CommandBar(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
     val cornerRadius = if (sharpCorners) 0.dp else 12.dp
 
-    // Re-focus and show soft keyboard every time screen unlocks or Activity resumes
+    // Safe Re-focus and show soft keyboard every time screen unlocks or Activity resumes
     DisposableEffect(lifecycleOwner, autoFocus) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME && autoFocus) {
-                focusRequester.requestFocus()
-                keyboardController?.show()
+                coroutineScope.launch {
+                    delay(100)
+                    try {
+                        focusRequester.requestFocus()
+                        keyboardController?.show()
+                    } catch (e: Exception) {
+                        // Safe catch for focus race condition
+                    }
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
