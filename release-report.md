@@ -1,5 +1,5 @@
 # Release Preparation Report: Kern Launcher
-Date: 2026-10-13   Branch: release/prep-20261013   Commit: 8eacefc
+Date: 2026-10-13   Branch: release/prep-20261013   Commit: 5f6db2f
 Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 
 ## Summary
@@ -8,7 +8,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 | Phase 0: Preflight | PASS | 0 | 0 | 0 |
 | Phase 1: Baseline Health | FAIL | 1 | 2 | 0 |
 | Phase 2: Manifest & Launcher Role Audit | PASS | 0 | 4 | 0 |
-| Phase 3: Build Configuration | PENDING | 0 | 0 | 0 |
+| Phase 3: Build Configuration | PASS | 1 | 2 | 0 |
 | Phase 4: Room & DataStore Safety | PENDING | 0 | 0 | 0 |
 | Phase 5: Static Security & Privacy Scan | PENDING | 0 | 0 | 0 |
 | Phase 6: Generate & Run Unit Tests | PENDING | 0 | 0 | 0 |
@@ -75,10 +75,22 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - **Debuggable in Release:** PASS (`android:debuggable` is not present in release manifest).
 - **Adaptive Icon Check:** FINDING `F-006`. Current launcher icon is a vector drawable in `res/drawable/ic_launcher.xml`; missing `res/mipmap-anydpi-v26/` adaptive icon with `<monochrome>` layer.
 
+## Phase 3 Build Configuration Details
+- **Minification & Shrinking:** Enabled (`isMinifyEnabled = true`, `isShrinkResources = true`).
+- **Debuggable Flag:** Configured (`isDebuggable = false`).
+- **ProGuard Configuration:** `proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")`. Created `app/proguard-rules.pro`.
+- **Signing Configuration:** Configured release `signingConfigs` consuming `KERN_KEYSTORE_PATH`, `KERN_KEYSTORE_PASSWORD`, `KERN_KEY_ALIAS`, `KERN_KEY_PASSWORD` via environment variables. Does not fail when variables are absent (falls back cleanly to unsigned build).
+- **Git Ignore Hygiene:** Added `keystore.properties` and `/app/release/` to `.gitignore`. Verified existing entries for `*.jks`, `*.keystore`, `local.properties`.
+- **Secret Scanning:**
+  - Binary/Key files (`*.jks`, `*.keystore`, `*.p12`, `*.pem`): None tracked in git index.
+  - Text pattern scan: Flagged `F-007` for hard-coded debug credentials in `app/build.gradle.kts`.
+- **Target SDK Review:** `targetSdk = 35` (Android 15), `versionCode = 2`. Flagged `F-008`.
+- **Verification Build:** PASS (`./gradlew assembleRelease --stacktrace` succeeded, output size: 1.38 MB).
+
 ## Artifacts
-- APK: pending
+- APK: pending (interim unsigned APK built at `app/build/outputs/apk/release/app-release-unsigned.apk`)
 - AAB: pending
-- R8 mapping: pending
+- R8 mapping: `app/build/outputs/mapping/release/mapping.txt`
 
 ## Findings (ordered by severity: Blocker, High, Medium, Low)
 ### F-001 Zero Unit Tests in Repository
@@ -130,10 +142,27 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - Proposed action: Create adaptive launcher icon XML referencing foreground, background, and monochrome layers.
 - Status: open
 
+### F-007 Hardcoded Debug Keystore Credentials
+- Phase: 3
+- Severity: Low
+- Location: `app/build.gradle.kts:28,30`
+- Evidence: `storePassword` and `keyPassword` values hard-coded in `signingConfigs.getByName("fixedDebug")`.
+- Proposed action: Standard practice for local debug keystores, but for clean release hygiene, can be migrated to environment variables or Gradle project properties.
+- Status: open
+
+### F-008 Target SDK Assessment Against Google Play Requirements
+- Phase: 3
+- Severity: Low
+- Location: `app/build.gradle.kts:15`
+- Evidence: `targetSdk = 35`, `versionCode = 2`.
+- Proposed action: Per official Google Play policy ([Target SDK Requirements](https://developer.android.com/google/play/requirements/target-sdk)), apps submitted after August 31, 2024 must target Android 14 (API 34)+, and by August 31, 2025 must target Android 15 (API 35)+. Kern Launcher currently targets API 35 (Android 15), fully complying with current and upcoming requirements. No change needed.
+- Status: open
+
 ## Changes Made
 - `release-prep: phase 0 preflight`: Initial preflight checks, environment capture, and initial release-report.md.
 - `release-prep: phase 1 baseline health`: Installed Temurin JDK 17 to `~/.jdks/temurin-17` and updated `gradlew` to ensure AGP/Gradle/JVM stability; recorded baseline health results.
 - `release-prep: phase 2 manifest audit`: Completed manifest, exported component, permission, and launcher role audit.
+- `release-prep: phase 3 build configuration`: Configured R8 minification, resource shrinking, non-fatal environment-based signing config, created `proguard-rules.pro`, updated `.gitignore`.
 
 ## Human Actions Remaining
 - [ ] Generate or supply the release keystore; back it up in two locations.

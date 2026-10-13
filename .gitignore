@@ -21,6 +21,8 @@ local.properties
 # Signing Keys & Credentials
 *.jks
 *.keystore
+keystore.properties
+/app/release/
 google-services.json
 
 # OS Generated Files
