@@ -52,6 +52,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kern.launcher.model.SearchResult
 import com.kern.launcher.service.intent.IntentFactory
+import com.kern.launcher.ui.components.DownloadDialog
 import com.kern.launcher.ui.components.HelpDialog
 import com.kern.launcher.ui.components.HiddenAppsDialog
 import com.kern.launcher.ui.home.HomeViewModel
@@ -77,6 +78,7 @@ fun TuiHomeScreen(
 
     var showHelpDialog by remember { mutableStateOf(false) }
     var showHiddenAppsDialog by remember { mutableStateOf(false) }
+    var downloadTargetUrl by remember { mutableStateOf<String?>(null) }
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -99,7 +101,8 @@ fun TuiHomeScreen(
         viewModel.executeCurrentSelection(
             onOpenSettings = onOpenSettings,
             onOpenHelp = { showHelpDialog = true },
-            onOpenHiddenApps = { showHiddenAppsDialog = true }
+            onOpenHiddenApps = { showHiddenAppsDialog = true },
+            onOpenDownloader = { url -> downloadTargetUrl = url }
         )
     }
 
@@ -117,6 +120,14 @@ fun TuiHomeScreen(
             onUnhideApp = { pkg -> viewModel.unhideApp(pkg) },
             sharpCorners = true,
             onDismiss = { showHiddenAppsDialog = false }
+        )
+    }
+
+    downloadTargetUrl?.let { targetUrl ->
+        DownloadDialog(
+            initialUrl = targetUrl,
+            sharpCorners = true,
+            onDismiss = { downloadTargetUrl = null }
         )
     }
 
@@ -312,7 +323,8 @@ fun TuiHomeScreen(
                                 result = item,
                                 onOpenSettings = onOpenSettings,
                                 onOpenHelp = { showHelpDialog = true },
-                                onOpenHiddenApps = { showHiddenAppsDialog = true }
+                                onOpenHiddenApps = { showHiddenAppsDialog = true },
+                                onOpenDownloader = { url -> downloadTargetUrl = url }
                             )
                         }
                     )

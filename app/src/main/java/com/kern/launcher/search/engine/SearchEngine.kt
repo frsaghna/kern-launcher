@@ -47,6 +47,24 @@ private val SYSTEM_SETTINGS_OPTIONS = listOf(
     SystemSettingOption("set_main", "Main System Settings", "Open full phone Settings app", Settings.ACTION_SETTINGS, listOf("main", "all", "system", "settings"))
 )
 
+private fun detectMediaPlatform(url: String): String {
+    val lower = url.lowercase()
+    return when {
+        lower.contains("youtube.com") || lower.contains("youtu.be") -> "YouTube"
+        lower.contains("tiktok.com") -> "TikTok"
+        lower.contains("instagram.com") -> "Instagram"
+        lower.contains("twitter.com") || lower.contains("x.com") -> "X / Twitter"
+        lower.contains("reddit.com") || lower.contains("v.redd.it") -> "Reddit"
+        lower.contains("facebook.com") || lower.contains("fb.watch") -> "Facebook"
+        lower.contains("soundcloud.com") -> "SoundCloud"
+        lower.contains("twitch.tv") -> "Twitch"
+        lower.contains("bilibili.com") || lower.contains("bilibili.tv") -> "Bilibili"
+        lower.contains("vimeo.com") -> "Vimeo"
+        lower.contains("pinterest.com") -> "Pinterest"
+        else -> "Media"
+    }
+}
+
 class SearchEngine {
 
     fun search(
@@ -80,6 +98,27 @@ class SearchEngine {
             return topApps
         }
 
+        val tokenized = InputTokenizer.tokenize(trimmed)
+        val keyword = tokenized.keyword.lowercase()
+
+        // 0. Downloader Command Check (down, dl, ytdl)
+        if (keyword in listOf("down", "dl", "ytdl")) {
+            val targetUrl = tokenized.args.trim()
+            val hasUrl = targetUrl.isNotBlank()
+            val platform = if (hasUrl) detectMediaPlatform(targetUrl) else "yt-dlp"
+            results.add(
+                SearchResult(
+                    id = "builtin_download",
+                    type = SearchResultType.BUILTIN_COMMAND,
+                    title = if (hasUrl) "Download Media ($platform)" else "Media Downloader (yt-dlp)",
+                    subtitle = if (hasUrl) targetUrl else "Open yt-dlp companion • Paste or select downloader",
+                    actionCommand = Command.MediaDownload(targetUrl),
+                    score = 4500.0
+                )
+            )
+            return results
+        }
+
         // Direct Scheme URI check (e.g. lazylogs://add?text=makan%20siang%2025k)
         if (trimmed.contains("://")) {
             results.add(
@@ -92,11 +131,24 @@ class SearchEngine {
                     score = 3000.0
                 )
             )
+            val lower = trimmed.lowercase()
+            val isKnownMedia = listOf("youtube.com", "youtu.be", "tiktok.com", "instagram.com", "twitter.com", "x.com", "reddit.com", "v.redd.it", "facebook.com", "soundcloud.com", "twitch.tv")
+                .any { lower.contains(it) }
+            if (isKnownMedia || lower.startsWith("http://") || lower.startsWith("https://")) {
+                val platform = detectMediaPlatform(trimmed)
+                results.add(
+                    SearchResult(
+                        id = "deeplink_download",
+                        type = SearchResultType.BUILTIN_COMMAND,
+                        title = "Download with yt-dlp ($platform)",
+                        subtitle = "Open media downloader companion: $trimmed",
+                        actionCommand = Command.MediaDownload(trimmed),
+                        score = 2950.0
+                    )
+                )
+            }
             return results
         }
-
-        val tokenized = InputTokenizer.tokenize(trimmed)
-        val keyword = tokenized.keyword.lowercase()
 
         // 1. Built-in Kern Settings Command Check (Exact keyword match)
         val settingsKeywords = listOf("settings", "setting", "config", "pref", "kern")

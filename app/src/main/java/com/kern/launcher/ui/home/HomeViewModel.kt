@@ -83,7 +83,7 @@ class HomeViewModel(
                     "settings", "setting", "config", "pref", "kern", "set",
                     "help", "?", "manual", "tui", "tuiview", "terminal",
                     "hidden", "hiddenapps", "secret", "info", "hide", "unhide",
-                    "ai", "log", "lazylogs", "timer",
+                    "ai", "log", "lazylogs", "timer", "down", "dl", "ytdl",
                     "g", "google", "yt", "spot", "spotify", "music",
                     "play", "store", "ps", "gh", "github", "wiki", "wikipedia",
                     "reddit", "r", "x", "tw", "twitter", "ddg", "duck", "maps", "map"
@@ -151,7 +151,8 @@ class HomeViewModel(
     fun executeCurrentSelection(
         onOpenSettings: () -> Unit,
         onOpenHelp: () -> Unit,
-        onOpenHiddenApps: () -> Unit
+        onOpenHiddenApps: () -> Unit,
+        onOpenDownloader: (String) -> Unit = {}
     ) = viewModelScope.launch {
         val results = searchResults.value
         val index = selectedIndex.value
@@ -163,7 +164,8 @@ class HomeViewModel(
                 onOpenSettings = onOpenSettings,
                 onOpenHelp = onOpenHelp,
                 onOpenHiddenApps = onOpenHiddenApps,
-                onToggleTuiView = { toggleTuiViewMode() }
+                onToggleTuiView = { toggleTuiViewMode() },
+                onOpenDownloader = onOpenDownloader
             )
             if (success) {
                 _query.value = ""
@@ -177,14 +179,16 @@ class HomeViewModel(
         result: SearchResult,
         onOpenSettings: () -> Unit,
         onOpenHelp: () -> Unit,
-        onOpenHiddenApps: () -> Unit
+        onOpenHiddenApps: () -> Unit,
+        onOpenDownloader: (String) -> Unit = {}
     ) = viewModelScope.launch {
         val success = commandExecutor.execute(
             command = result.actionCommand,
             onOpenSettings = onOpenSettings,
             onOpenHelp = onOpenHelp,
             onOpenHiddenApps = onOpenHiddenApps,
-            onToggleTuiView = { toggleTuiViewMode() }
+            onToggleTuiView = { toggleTuiViewMode() },
+            onOpenDownloader = onOpenDownloader
         )
         if (success) {
             _query.value = ""

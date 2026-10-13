@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.kern.launcher.ui.components.ClockView
 import com.kern.launcher.ui.components.CommandBar
 import com.kern.launcher.ui.components.DateView
+import com.kern.launcher.ui.components.DownloadDialog
 import com.kern.launcher.ui.components.HelpDialog
 import com.kern.launcher.ui.components.HiddenAppsDialog
 import com.kern.launcher.ui.search.SearchResultList
@@ -51,6 +52,7 @@ fun HomeScreen(
 
     var showHelpDialog by remember { mutableStateOf(false) }
     var showHiddenAppsDialog by remember { mutableStateOf(false) }
+    var downloadTargetUrl by remember { mutableStateOf<String?>(null) }
 
     if (userSettings.tuiViewMode) {
         TuiHomeScreen(
@@ -75,6 +77,14 @@ fun HomeScreen(
             onUnhideApp = { pkg -> viewModel.unhideApp(pkg) },
             sharpCorners = userSettings.sharpCorners,
             onDismiss = { showHiddenAppsDialog = false }
+        )
+    }
+
+    downloadTargetUrl?.let { targetUrl ->
+        DownloadDialog(
+            initialUrl = targetUrl,
+            sharpCorners = userSettings.sharpCorners,
+            onDismiss = { downloadTargetUrl = null }
         )
     }
 
@@ -160,7 +170,8 @@ fun HomeScreen(
                         viewModel.executeCurrentSelection(
                             onOpenSettings = onOpenSettings,
                             onOpenHelp = { showHelpDialog = true },
-                            onOpenHiddenApps = { showHiddenAppsDialog = true }
+                            onOpenHiddenApps = { showHiddenAppsDialog = true },
+                            onOpenDownloader = { url -> downloadTargetUrl = url }
                         )
                     },
                     onNavigateHistoryUp = { viewModel.navigateHistoryUp() },
@@ -192,7 +203,8 @@ fun HomeScreen(
                                 result = result,
                                 onOpenSettings = onOpenSettings,
                                 onOpenHelp = { showHelpDialog = true },
-                                onOpenHiddenApps = { showHiddenAppsDialog = true }
+                                onOpenHiddenApps = { showHiddenAppsDialog = true },
+                                onOpenDownloader = { url -> downloadTargetUrl = url }
                             )
                         }
                     )

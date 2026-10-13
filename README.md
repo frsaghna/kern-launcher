@@ -44,6 +44,7 @@ Kern Launcher replaces cluttered app grids with a clean, command-bar interface. 
 | **`<app_name>`** | Launch an installed application | `whatsapp` |
 | **`set <query>`** | Search 25+ System Settings pages | `set wifi` |
 | **`ai <prompt>`** | Query configured AI provider (ChatGPT / Gemini) | `ai explain relativity in 2 sentences` |
+| **`down <link>`** / **`dl`** | Open yt-dlp downloader companion (Seal / YTDLnis / Cobalt) | `down https://youtu.be/...` |
 | **`log <text>`** | Quick log entry to LazyLogs app | `log coffee 18000` |
 | **`<scheme>://...`** | Direct execute any custom App Deep Link URI | `lazylogs://add?text=lunch%2025k` |
 | **`spot <query>`** | Search music on Spotify app (or launch app) | `spot daft punk` |

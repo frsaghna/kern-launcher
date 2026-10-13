@@ -24,6 +24,7 @@ sealed class Command {
     data object ToggleTuiView : Command()
     data object OpenSettings : Command()
     data object Help : Command()
+    data class MediaDownload(val url: String) : Command()
     data class CustomAlias(val alias: String, val resolvedCommand: Command) : Command()
     data class Unknown(val rawQuery: String) : Command()
 }

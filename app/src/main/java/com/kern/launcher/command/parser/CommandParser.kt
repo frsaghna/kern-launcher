@@ -8,11 +8,6 @@ object CommandParser {
         val trimmed = input.trim()
         if (trimmed.isEmpty()) return Command.Unknown("")
 
-        // Check if raw input is a direct Deep Link URI (e.g., lazylogs://..., myapp://...)
-        if (trimmed.contains("://")) {
-            return Command.DeepLinkUri(trimmed, "Open Deep Link")
-        }
-
         val tokenized = InputTokenizer.tokenize(trimmed)
 
         return when (tokenized.keyword) {
@@ -20,6 +15,7 @@ object CommandParser {
             "hidden", "hiddenapps", "secret" -> Command.ShowHiddenApps
             "tui", "tuiview", "terminal" -> Command.ToggleTuiView
             "ai" -> Command.AiSearch(prompt = tokenized.args)
+            "down", "dl", "ytdl" -> Command.MediaDownload(url = tokenized.args)
             "log", "lazylogs" -> Command.LazyLogsAdd(rawText = tokenized.args)
             "maps", "map" -> Command.GoogleMaps(tokenized.args)
             "yt" -> Command.YoutubeSearch(tokenized.args)
@@ -36,7 +32,13 @@ object CommandParser {
                 Command.Timer(durationSeconds = seconds, rawInput = tokenized.args)
             }
             "settings", "config", "pref" -> Command.OpenSettings
-            else -> Command.Unknown(tokenized.raw)
+            else -> {
+                if (trimmed.contains("://")) {
+                    Command.DeepLinkUri(trimmed, "Open Deep Link")
+                } else {
+                    Command.Unknown(tokenized.raw)
+                }
+            }
         }
     }
 

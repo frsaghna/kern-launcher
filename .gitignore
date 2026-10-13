@@ -32,3 +32,4 @@ Thumbs.db
 *.log
 .system_generated/
 .gemini/
+graphify-out/

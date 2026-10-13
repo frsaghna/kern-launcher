@@ -21,7 +21,8 @@ class CommandExecutor(
         onOpenSettings: () -> Unit = {},
         onOpenHelp: () -> Unit = {},
         onOpenHiddenApps: () -> Unit = {},
-        onToggleTuiView: () -> Unit = {}
+        onToggleTuiView: () -> Unit = {},
+        onOpenDownloader: (url: String) -> Unit = {}
     ): Boolean {
         return try {
             when (command) {
@@ -213,8 +214,13 @@ class CommandExecutor(
                     onOpenHelp()
                     true
                 }
+                is Command.MediaDownload -> {
+                    onOpenDownloader(command.url)
+                    historyRepository.recordCommand(if (command.url.isNotBlank()) "down ${command.url}" else "down")
+                    true
+                }
                 is Command.CustomAlias -> {
-                    execute(command.resolvedCommand, onOpenSettings, onOpenHelp, onOpenHiddenApps, onToggleTuiView)
+                    execute(command.resolvedCommand, onOpenSettings, onOpenHelp, onOpenHiddenApps, onToggleTuiView, onOpenDownloader)
                 }
                 is Command.Unknown -> {
                     if (command.rawQuery.isNotBlank()) {
