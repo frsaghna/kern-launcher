@@ -1,5 +1,5 @@
 # Release Preparation Report: Kern Launcher
-Date: 2026-10-13   Branch: release/prep-20261013   Commit: 9294bd4
+Date: 2026-10-14   Branch: release/prep-20261013   Commit: 90fae49
 Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 
 ## Summary
@@ -16,7 +16,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 | Phase 8: Release Build & R8 Verification | PASS | 0 | 0 | 0 |
 | Phase 9: Device Smoke Test | SKIPPED (no device) | 0 | 0 | 0 |
 | Phase 10: Continuous Integration | PASS | 0 | 0 | 0 |
-| Phase 11: Documentation & Metadata | PENDING | 0 | 0 | 0 |
+| Phase 11: Documentation & Metadata | PASS | 0 | 2 | 0 |
 | Phase 12: Items Requiring a Human | HUMAN | 0 | 0 | 0 |
 
 ## Project Inventory
@@ -204,6 +204,25 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - **Syntax Validation:** PASS (parsed and verified via YAML parser).
 - **Security Check:** Zero signing credentials or keystores included in CI configuration.
 
+## Phase 11 Documentation & Metadata Details
+- **README.md:** Updated and verified with:
+  - Default launcher selection steps (Android Settings & Home button intents).
+  - Complete command reference synchronized with `CommandParser` and `HelpView`.
+  - Detailed build instructions for Debug, unsigned Release, and signed Release via environment variables.
+  - Known limitations (no AppWidgets by design, physical/virtual keyboard requirement, package query permissions, no background sync).
+- **CHANGELOG.md:** Created following Keep a Changelog format covering v1.0.1 (release candidate) and v1.0.0 (initial release).
+- **PRIVACY.md:** Created draft ("DRAFT: requires human review") covering:
+  - Local-only storage of aliases, command history, hidden apps, usage stats, and DataStore settings.
+  - Zero analytics, zero remote telemetry, zero crash reporting SDKs.
+  - Absence of `android.permission.INTERNET`.
+  - External intent routing for search, deep links, and yt-dlp companion.
+  - Data erasure and uninstallation steps.
+- **LICENSE:** Verified existing GNU General Public License v3.0 (`LICENSE` file in repo root).
+- **Strings and Localization Audit:**
+  - `app/src/main/res/values/strings.xml` verified containing `<string name="app_name">Kern</string>`.
+  - `grep -rn "Text(\"" app/src/main/java` detected 20 hard-coded UI strings across dialogs and settings. Flagged as `F-011`.
+- **Planning Documents:** Identified `projectplanningnextphase.md` in repository root. Flagged as `F-012` for human review prior to public release.
+
 ## Artifacts
 - APK: `release-artifacts/app-release-unsigned.apk`, 1.4 MB (1,381,562 bytes), SHA-256 `0459e99ec90d4dc50c9838d73da7fa020a5c31dc80912e94b99cc03328791497` (signed: no)
 - AAB: `release-artifacts/app-release.aab`, 3.2 MB (3,336,909 bytes), SHA-256 `9cb5eaa7cc19950d4a8d9e6a3a8f42afd1511e02998bdf1600dd93bf87d34749`
@@ -291,17 +310,34 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - Proposed action: In release builds, uncaught exceptions should not dump to standard error streams; prefer silent fallback or logging guarded by `BuildConfig.DEBUG`.
 - Status: open
 
+### F-011 Hardcoded UI Strings in Composable Views
+- Phase: 11
+- Severity: Low
+- Location: Multiple UI components (`SettingsScreen.kt`, `AliasManagerView.kt`, `HiddenAppsManagerView.kt`, `ColorPickerDialog.kt`, `HelpView.kt`, `DownloadDialog.kt`)
+- Evidence: `grep -rn "Text(\"" app/src/main/java` detected 20 instances of hardcoded string literals instead of `stringResource(...)`.
+- Proposed action: If internationalization / localization is planned for future versions, extract UI string literals to `res/values/strings.xml`.
+- Status: open
+
+### F-012 Internal Project Planning Document Present in Repository Root
+- Phase: 11
+- Severity: Low
+- Location: `projectplanningnextphase.md`
+- Evidence: File `projectplanningnextphase.md` exists in repository root.
+- Proposed action: [HUMAN] Review if this internal roadmap should remain in the public open-source repository or be moved to private documentation. (Do not delete without human approval).
+- Status: open
+
 ## Changes Made
-- `release-prep: phase 0 preflight`: Initial preflight checks, environment capture, and initial release-report.md.
-- `release-prep: phase 1 baseline health`: Installed Temurin JDK 17 to `~/.jdks/temurin-17` and updated `gradlew` to ensure AGP/Gradle/JVM stability; recorded baseline health results.
-- `release-prep: phase 2 manifest audit`: Completed manifest, exported component, permission, and launcher role audit.
-- `release-prep: phase 3 build configuration`: Configured R8 minification, resource shrinking, non-fatal environment-based signing config, created `proguard-rules.pro`, updated `.gitignore`.
-- `release-prep: phase 4 room and datastore safety`: Enabled `exportSchema = true`, generated `2.json`, removed `fallbackToDestructiveMigration()`, added DataStore corruption handler, added Room testing & DAO round-trip test.
-- `release-prep: phase 5 security and privacy scan`: Performed static scans for logging, intents, URLs, blocking calls, audited DownloadDialog.kt, and added ProGuard log stripping rules.
-- `release-prep: phase 6 unit tests`: Implemented 38 unit tests across InputTokenizer, CommandParser, CalculatorEvaluator, SearchRanker, AliasRepository, and UserSettings with 100% pass rate.
-- `release-prep: phase 7 lint and style`: Fixed obsolete SDK qualifier directory, fixed SET_ALARM permission typo, handled QueryAllPackagesPermission lint error, added ktlint plugin in report-only mode, verified 0 TODO/FIXME markers, and verified lintRelease passed with 0 errors.
-- `release-prep: phase 8 release build and r8 verification`: Built release APK and bundle, verified R8 minification and resource shrinking, validated non-debuggability and badging via aapt2, preserved mapping file, and computed SHA-256 checksums.
-- `release-prep: phase 10 continuous integration`: Created GitHub Actions CI workflow in `.github/workflows/android.yml` with Temurin 17, Gradle validation, debug test/lint, unsigned release build, and artifact archiving.
+- `2658d29`: `release-prep: phase 0 preflight` - Initial preflight checks, environment capture, and initial release-report.md.
+- `8eacefc`: `release-prep: phase 1 baseline health` - Installed Temurin JDK 17 to `~/.jdks/temurin-17` and updated `gradlew` to ensure AGP/Gradle/JVM stability; recorded baseline health results.
+- `5f6db2f`: `release-prep: phase 2 manifest audit` - Completed manifest, exported component, permission, and launcher role audit.
+- `00fb7b5`: `release-prep: phase 3 build configuration` - Configured R8 minification, resource shrinking, non-fatal environment-based signing config, created `proguard-rules.pro`, updated `.gitignore`.
+- `6f6443a`: `release-prep: phase 4 room and datastore safety` - Enabled `exportSchema = true`, generated `2.json`, removed `fallbackToDestructiveMigration()`, added DataStore corruption handler, added Room testing & DAO round-trip test.
+- `9294bd4`: `release-prep: phase 5 security and privacy scan` - Performed static scans for logging, intents, URLs, blocking calls, audited DownloadDialog.kt, and added ProGuard log stripping rules.
+- `636eee4`: `release-prep: phase 6 unit tests` - Implemented 38 unit tests across InputTokenizer, CommandParser, CalculatorEvaluator, SearchRanker, AliasRepository, and UserSettings with 100% pass rate.
+- `977ff5b`: `release-prep: phase 7 lint and style` - Fixed obsolete SDK qualifier directory, fixed SET_ALARM permission typo, handled QueryAllPackagesPermission lint error, added ktlint plugin in report-only mode, verified 0 TODO/FIXME markers, and verified lintRelease passed with 0 errors.
+- `26ecd2d`: `release-prep: phase 8 release build and r8 verification` - Built release APK and bundle, verified R8 minification and resource shrinking, validated non-debuggability and badging via aapt2, preserved mapping file, and computed SHA-256 checksums.
+- `b79a0f4`: `release-prep: phase 10 continuous integration` - Created GitHub Actions CI workflow in `.github/workflows/android.yml` with Temurin 17, Gradle validation, debug test/lint, unsigned release build, and artifact archiving.
+- `90fae49`: `release-prep: phase 11 documentation and metadata` - Updated README.md with default launcher guide and command reference, created CHANGELOG.md, drafted PRIVACY.md, audited LICENSE and UI string localization.
 
 ## Human Actions Remaining
 - [ ] Generate or supply the release keystore; back it up in two locations.

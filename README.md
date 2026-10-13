@@ -11,85 +11,140 @@ A raw, keyboard-driven, ultra-minimalist Android launcher designed for power use
 
 ## Overview
 
-Kern Launcher replaces cluttered app grids with a clean, command-bar interface. Type to launch applications, run instant deep search shortcuts across your favorite apps, integrate custom URI deep links, or query AI assistants—all without leaving your home screen.
+Kern Launcher replaces cluttered app grids and infinite icon pages with a clean, command-bar interface. Type to launch applications, evaluate calculations, trigger instant deep-search shortcuts into your favorite apps, integrate custom URI deep links, or query AI assistants—all from your home screen without distraction.
+
+---
+
+## Setting Kern as Default Launcher
+
+To make Kern your primary home screen launcher:
+1. Open Android **Settings**.
+2. Navigate to **Apps** (or **Apps & Notifications**) → **Default Apps** → **Home app**.
+3. Select **Kern**.
+4. Alternatively, press your device's **Home button** or swipe up to go home; when prompted by Android, select **Kern** and choose **Always**.
 
 ---
 
 ## Features
 
-- **Fast App Launcher**: Instant fuzzy search with auto-launch capability.
-- **Deep Search Shortcuts**: Instant search into YouTube, Spotify, GitHub, Wikipedia, Reddit, X/Twitter, Play Store, and Google.
-- **System Settings Index**: Type `set <query>` (e.g. `set wifi`, `set battery`, `set display`) to query 25+ Android system settings pages directly.
-- **Configurable AI Command**: Type `ai <prompt>` to query your preferred AI provider (ChatGPT, Google Gemini, Perplexity, or Claude).
+- **Blazing Fast App Launching**: Instant fuzzy search across installed apps with deterministic ranking and auto-launch capability.
+- **Deep Search Shortcuts**: Search directly inside YouTube, Spotify, GitHub, Wikipedia, Reddit, X (Twitter), DuckDuckGo, Google, and the Play Store.
+- **System Settings Index**: Query 25+ Android system settings pages directly using `set <query>` (e.g. `set wifi`, `set battery`, `set display`, `set dns`).
+- **Configurable AI Command**: Run `ai <prompt>` to query your preferred AI service (ChatGPT, Google Gemini, Perplexity, or Claude).
+- **yt-dlp Companion**: Run `down <link>` or `dl` to open an intent-based companion dialog routing media URLs to user-installed downloaders (Seal, YTDLnis) or web tools (Cobalt).
+- **Inline Calculator**: Type mathematical expressions directly into the command bar (e.g. `24 * 7`, `(12 + 8) / 4`, `2^8`) for instant answers.
 - **Native Deep Link Support**: Execute custom URI schemes (e.g. `lazylogs://add?text=lunch%2025k`) or use the built-in `log <text>` financial tracking shortcut.
-- **Built-in Utilities**: Quick timer alarm (`timer 20m`), app settings shortcut (`info <app>`), and app management (`hide <app>` / `unhide <app>`).
+- **Built-in App & System Utilities**:
+  - Quick countdown timer (`timer 20m`, `timer 30s`, `timer 1h`)
+  - App settings shortcut (`info <app>`)
+  - Hide & unhide apps (`hide <app>`, `unhide <app>`, `hidden`)
+  - User-defined aliases with cycle detection (`settings` → Custom Aliases)
 - **Deep Aesthetic Customization**:
-  - **Wallpaper Passthrough**: Transparent background option with glassmorphism elements.
-  - **Custom Theme Builder**: Full Hex color picker for Background, Primary Accent, and Text colors.
-  - **Preset Color Palettes**: VS Code Dark+, OLED Pitch Black, Dracula, Monokai Pro, One Dark, Tokyo Night, Gruvbox, Nord, and Cyberpunk.
+  - **Wallpaper Passthrough**: Transparent background option with blur / glassmorphism.
+  - **Custom Theme Builder**: Full Hex & HSV visual color picker for Background, Primary Accent, and Text colors.
+  - **Preset Color Palettes**: 38+ themes including VS Code Dark+, OLED Pitch Black, Dracula, Monokai Pro, One Dark, Tokyo Night, Gruvbox, Nord, Cyberpunk, and iconic mechanical keyboard palettes.
   - **Typography & Font Sizes**: JetBrains Mono (Raw Monospace), Sans-Serif, Serif, Cursive, and System Default fonts.
   - **Independent Alignments**: Separate Left, Center, or Right alignments for Clock and App List.
-  - **Borderless Text Mode**: Toggle square outlines to hide container cards for a pure text-only UI.
-- **Experimental Retro TUI Mode**: 100% pure ASCII terminal UI with framed window boxes (`tui`).
+  - **Borderless Text Mode**: Hide container cards for pure text-only presentation.
+- **Experimental Retro TUI Mode**: Pure ASCII terminal user interface with bordered window boxes (`tui`).
 - **Gesture Shortcuts**: Assign custom apps to Swipe Left and Swipe Right home gestures.
-- **Interactive Clock & Calendar**: Tap time to open System Clock (optimized for Samsung Galaxy One UI & Stock Android) and date to open Calendar.
-- **Real-time Package Monitor**: Broadcast receiver updates search query results immediately upon app install/uninstall.
+- **Interactive Clock & Calendar**: Tap time to open System Clock and tap date to open System Calendar.
 
 ---
 
-## Command Cheatsheet
+## Command Reference
 
-| Command / Input | Description | Example |
-| :--- | :--- | :--- |
-| **`<app_name>`** | Launch an installed application | `whatsapp` |
-| **`set <query>`** | Search 25+ System Settings pages | `set wifi` |
-| **`ai <prompt>`** | Query configured AI provider (ChatGPT / Gemini) | `ai explain relativity in 2 sentences` |
-| **`down <link>`** / **`dl`** | Open yt-dlp downloader companion (Seal / YTDLnis / Cobalt) | `down https://youtu.be/...` |
-| **`log <text>`** | Quick log entry to LazyLogs app | `log coffee 18000` |
-| **`<scheme>://...`** | Direct execute any custom App Deep Link URI | `lazylogs://add?text=lunch%2025k` |
-| **`spot <query>`** | Search music on Spotify app (or launch app) | `spot daft punk` |
-| **`yt <query>`** | Search videos on YouTube app (or launch app) | `yt lofi beats` |
-| **`play <query>`** | Search apps on Play Store (or launch app) | `play minecraft` |
-| **`gh <query>`** | Search repositories on GitHub (or launch app) | `gh compose` |
-| **`wiki <query>`** | Search articles on Wikipedia (or launch app) | `wiki quantum physics` |
-| **`r <query>`** | Search posts on Reddit (or launch app) | `r androiddev` |
-| **`x <query>`** | Search tweets on X / Twitter (or launch app) | `x android 15` |
-| **`g <query>`** | Search web on Google Search | `g kotlin flow` |
-| **`maps <loc>`** | Search location on Google Maps | `maps jakarta` |
-| **`timer <time>`** | Set timer alarm | `timer 20m` |
-| **`info <app>`** | Open system Settings page for application | `info instagram` |
-| **`hide <app>`** | Hide application from search results | `hide games` |
-| **`unhide <app>`** | Restore hidden application to search | `unhide games` |
-| **`hidden`** | View and manage all hidden applications | `hidden` |
-| **`tui`** | Toggle retro TUI terminal view mode | `tui` |
-| **`help` / `?`** | Display interactive command manual | `help` |
-| **`settings`** | Open Kern Launcher settings screen | `settings` |
+The table below lists all built-in commands supported by `CommandParser`:
+
+| Command / Keyword | Arguments | Description | Example |
+| :--- | :--- | :--- | :--- |
+| **`<app_name>`** | — | Launch an installed application | `whatsapp` |
+| **`<math_expr>`** | — | Inline mathematical calculation | `(120 * 4) + 15` |
+| **`settings`**, `config`, `pref` | — | Open Kern Launcher settings screen | `settings` |
+| **`help`**, `?`, `manual` | — | Open interactive manual dialog | `help` |
+| **`set <query>`** | `<query>` | Search 25+ Android System Settings | `set wifi`, `set battery` |
+| **`tui`**, `tuiview`, `terminal` | — | Toggle retro ASCII TUI terminal mode | `tui` |
+| **`info <app>`** | `<app>` | Open system App Info settings page | `info instagram` |
+| **`hide <app>`** | `<app>` | Hide application from search results | `hide games` |
+| **`unhide <app>`** | `<app>` | Restore hidden application to search results | `unhide games` |
+| **`hidden`**, `hiddenapps`, `secret` | — | View and manage all hidden applications | `hidden` |
+| **`ai <prompt>`** | `<prompt>` | Query configured AI provider | `ai explain p vs np` |
+| **`down <link>`**, `dl`, `ytdl` | `[link]` | Open yt-dlp downloader companion | `down https://youtu.be/...` |
+| **`maps <loc>`**, `map` | `<location>` | Search location or directions on Google Maps | `maps tokyo station` |
+| **`timer <duration>`** | `<time>` | Set countdown timer (`h`, `m`, `s`) | `timer 25m`, `timer 45s` |
+| **`log <text>`**, `lazylogs` | `<text>` | Append entry to LazyLogs app | `log coffee 20k` |
+| **`<scheme>://...`** | — | Direct execute custom app deep link URI | `obsidian://open?vault=work` |
+| **`g <query>`**, `google` | `<query>` | Search Google in browser | `g android compose` |
+| **`ddg <query>`**, `duck` | `<query>` | Search DuckDuckGo in browser | `ddg privacy guide` |
+| **`yt <query>`** | `<query>` | Search YouTube (app or browser) | `yt lofi beats` |
+| **`spot <query>`**, `spotify`, `music` | `<query>` | Search Spotify (app or browser) | `spot daft punk` |
+| **`play <query>`**, `store`, `ps` | `<query>` | Search Google Play Store | `play termux` |
+| **`gh <query>`**, `github` | `<query>` | Search GitHub repositories | `gh compose` |
+| **`wiki <query>`**, `wikipedia` | `<query>` | Search Wikipedia articles | `wiki quantum electrodynamics` |
+| **`reddit <query>`**, `r` | `<query>` | Search Reddit posts or subreddits | `r androiddev` |
+| **`x <query>`**, `tw`, `twitter` | `<query>` | Search posts on X / Twitter | `x jetpack compose` |
+
+### Keyboard & Gesture Navigation
+- **Enter / Return**: Execute query, launch top app, or run command.
+- **Up / Down Arrow**: Cycle through historical commands.
+- **Swipe Left / Right**: Trigger configured gesture application shortcuts.
+- **Tap Clock**: Launch device system clock / alarm.
+- **Tap Date**: Launch device system calendar.
 
 ---
 
-## Building & Installation
+## Building from Source
 
 ### Prerequisites
-- Android Studio Ladybug (2024.2.1+) or JDK 17+
-- Android SDK 34+
+- JDK 17 (e.g. Eclipse Temurin 17)
+- Android SDK with `compileSdk 35` / `targetSdk 35` (Android 15)
+- Git
 
 ### Build Debug APK
 ```bash
 git clone https://github.com/USERNAME/kern-launcher.git
 cd kern-launcher
-./gradlew assembleDebug
+./gradlew assembleDebug testDebugUnitTest
 ```
-The compiled APK will be located at:
-`app/build/outputs/apk/debug/app-debug.apk`
+Debug APK location: `app/build/outputs/apk/debug/app-debug.apk`
+
+### Build Minified Release APK & App Bundle
+```bash
+./gradlew assembleRelease bundleRelease
+```
+Outputs:
+- Release APK: `app/build/outputs/apk/release/app-release-unsigned.apk`
+- Release AAB: `app/build/outputs/bundle/release/app-release.aab`
+- ProGuard / R8 Mapping: `app/build/outputs/mapping/release/mapping.txt`
+
+To sign the release build, provide the following environment variables:
+```bash
+export KERN_KEYSTORE_PATH="/path/to/keystore.jks"
+export KERN_KEYSTORE_PASSWORD="keystore-password"
+export KERN_KEY_ALIAS="key-alias"
+export KERN_KEY_PASSWORD="key-password"
+./gradlew assembleRelease
+```
 
 ---
 
-## Privacy & Permissions
+## Known Limitations
 
-Kern Launcher is designed with a privacy-first approach:
-- **No Internet/Network Permissions Required**: The launcher itself operates entirely offline.
-- **No Accessibility Services**: Kept minimal to avoid Play Protect warnings and preserve battery.
-- **Minimal Permissions**: Uses `QUERY_ALL_PACKAGES` for app discovery and `SET_ALARM` for timers.
+- **No Home Screen Widgets**: Kern Launcher is strictly keyboard- and text-driven by design; Android AppWidget hosts are intentionally not implemented.
+- **Requires Keyboard Input**: Best suited for physical keyboards or software virtual keyboards; icon grid browsing is intentionally absent.
+- **Package Visibility (`QUERY_ALL_PACKAGES`)**: On Android 11+ (API 30+), launcher apps require visibility to query all installed packages to present an app list. For Google Play releases, a Sensitive Permission Declaration is required.
+- **No Background Network Sync**: Kern Launcher operates entirely offline and does not contain background network sync or telemetry services.
+
+---
+
+## Privacy
+
+Kern Launcher is designed with privacy as a foundational principle:
+- No telemetry, analytics, or remote tracking.
+- No network permissions are requested by the app itself.
+- All aliases, command history, and preferences remain strictly on your local device.
+
+See [PRIVACY.md](PRIVACY.md) for full details.
 
 ---
 
