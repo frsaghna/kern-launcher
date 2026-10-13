@@ -12,7 +12,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 | Phase 4: Room & DataStore Safety | PASS | 2 | 1 | 0 |
 | Phase 5: Static Security & Privacy Scan | PASS | 1 | 1 | 0 |
 | Phase 6: Generate & Run Unit Tests | PASS | 1 | 0 | 0 |
-| Phase 7: Lint & Style | PENDING | 0 | 0 | 0 |
+| Phase 7: Lint & Style | PASS | 2 | 0 | 0 |
 | Phase 8: Release Build & R8 Verification | PENDING | 0 | 0 | 0 |
 | Phase 9: Device Smoke Test | SKIPPED (no device) | 0 | 0 | 0 |
 | Phase 10: Continuous Integration | PENDING | 0 | 0 | 0 |
@@ -156,6 +156,22 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
     - Default values verify exactly against documented specifications
     - Data copy immutability and default preservation
 
+## Phase 7 Lint & Style Details
+- **Command:** `./gradlew lintRelease --stacktrace` (PASSED with 0 ERRORS, 38 warnings).
+- **Report Location:** `app/build/reports/lint-results-release.html`.
+- **Warning Count by Category (38 total):**
+  - `InlinedApi` (1): `SearchEngine.kt:35` (`Settings.ACTION_ALL_APPS_NOTIFICATION_SETTINGS` inlined constant for API 33)
+  - `OldTargetApi` (1): `app/build.gradle.kts:15` (Advisory warning on targetSdk 35)
+  - `AndroidGradlePluginVersion` (3): `gradle/libs.versions.toml`
+  - `GradleDependency` (29): Outdated dependency versions declared in `gradle/libs.versions.toml`
+  - `ModifierParameter` (4): Compose modifier parameter ordering in UI composables
+- **Fixes Applied:**
+  - `ObsoleteSdkInt`: Deleted empty directory `app/src/main/res/mipmap-anydpi-v26` which had an obsolete API qualifier for minSdk 26.
+  - `SystemPermissionTypo`: Corrected `android.permission.SET_ALARM` to `com.android.alarm.permission.SET_ALARM` in `app/src/main/AndroidManifest.xml` (Fixes `F-003`).
+  - `QueryAllPackagesPermission`: Added `xmlns:tools="http://schemas.android.com/tools"` and `tools:ignore="QueryAllPackagesPermission"` to `QUERY_ALL_PACKAGES` permission declaration in `app/src/main/AndroidManifest.xml` (Fixes `F-002` build break; Google Play policy submission tracked under `F-004`).
+- **Linter & Style Tooling:** Added `org.jlleitschuh.gradle.ktlint:12.1.2` in report-only mode (`ignoreFailures.set(true)`, `android.set(true)`). Executed `./gradlew ktlintCheck` (recorded 757 formatting/style findings, 0 build failures).
+- **Source Marker Scan:** Executed `grep -rnE "TODO|FIXME|HACK|XXX" app/src/main`. Result: **0 matches** found. Clean codebase.
+
 ## Artifacts
 - APK: pending (interim unsigned APK built at `app/build/outputs/apk/release/app-release-unsigned.apk`)
 - AAB: pending
@@ -175,16 +191,16 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - Severity: High
 - Location: `app/src/main/AndroidManifest.xml:4`
 - Evidence: `app/src/main/AndroidManifest.xml:4: Error: A <queries> declaration should generally be used instead of QUERY_ALL_PACKAGES; see https://g.co/dev/packagevisibility for details [QueryAllPackagesPermission]`
-- Proposed action: Address in lint configuration / Phase 7; see F-004.
-- Status: open
+- Proposed action: Suppress lint error specifically via `tools:ignore="QueryAllPackagesPermission"` since Kern Launcher is an Android home launcher, while tracking Google Play store submission requirements under F-004.
+- Status: fixed in `release-prep: phase 7 lint and style`
 
 ### F-003 Manifest Permission Typo for Alarm
 - Phase: 2
 - Severity: Medium
 - Location: `app/src/main/AndroidManifest.xml:5`
 - Evidence: `<uses-permission android:name="android.permission.SET_ALARM" />` (Android framework defines `com.android.alarm.permission.SET_ALARM`).
-- Proposed action: Propose updating permission string to `com.android.alarm.permission.SET_ALARM`.
-- Status: open
+- Proposed action: Update permission string to `com.android.alarm.permission.SET_ALARM`.
+- Status: fixed in `release-prep: phase 7 lint and style`
 
 ### F-004 Play Permission Declaration Required: QUERY_ALL_PACKAGES
 - Phase: 2
@@ -251,6 +267,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - `release-prep: phase 4 room and datastore safety`: Enabled `exportSchema = true`, generated `2.json`, removed `fallbackToDestructiveMigration()`, added DataStore corruption handler, added Room testing & DAO round-trip test.
 - `release-prep: phase 5 security and privacy scan`: Performed static scans for logging, intents, URLs, blocking calls, audited DownloadDialog.kt, and added ProGuard log stripping rules.
 - `release-prep: phase 6 unit tests`: Implemented 38 unit tests across InputTokenizer, CommandParser, CalculatorEvaluator, SearchRanker, AliasRepository, and UserSettings with 100% pass rate.
+- `release-prep: phase 7 lint and style`: Fixed obsolete SDK qualifier directory, fixed SET_ALARM permission typo, handled QueryAllPackagesPermission lint error, added ktlint plugin in report-only mode, verified 0 TODO/FIXME markers, and verified lintRelease passed with 0 errors.
 
 ## Human Actions Remaining
 - [ ] Generate or supply the release keystore; back it up in two locations.

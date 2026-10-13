@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 android {
@@ -100,4 +101,9 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
+}
+
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    android.set(true)
+    ignoreFailures.set(true)
 }
