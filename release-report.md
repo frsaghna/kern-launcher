@@ -13,7 +13,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 | Phase 5: Static Security & Privacy Scan | PASS | 1 | 1 | 0 |
 | Phase 6: Generate & Run Unit Tests | PASS | 1 | 0 | 0 |
 | Phase 7: Lint & Style | PASS | 2 | 0 | 0 |
-| Phase 8: Release Build & R8 Verification | PENDING | 0 | 0 | 0 |
+| Phase 8: Release Build & R8 Verification | PASS | 0 | 0 | 0 |
 | Phase 9: Device Smoke Test | SKIPPED (no device) | 0 | 0 | 0 |
 | Phase 10: Continuous Integration | PENDING | 0 | 0 | 0 |
 | Phase 11: Documentation & Metadata | PENDING | 0 | 0 | 0 |
@@ -172,10 +172,29 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - **Linter & Style Tooling:** Added `org.jlleitschuh.gradle.ktlint:12.1.2` in report-only mode (`ignoreFailures.set(true)`, `android.set(true)`). Executed `./gradlew ktlintCheck` (recorded 757 formatting/style findings, 0 build failures).
 - **Source Marker Scan:** Executed `grep -rnE "TODO|FIXME|HACK|XXX" app/src/main`. Result: **0 matches** found. Clean codebase.
 
+## Phase 8 Release Build & R8 Verification Details
+- **Build Command:** `./gradlew clean assembleRelease bundleRelease --stacktrace` (PASSED in 4m 28s).
+- **R8 Execution:** Minification and resource shrinking verified via `:app:minifyReleaseWithR8` and `:app:shrinkReleaseRes`.
+- **Mapping Preservation:** R8 mapping saved to `release-artifacts/mapping-1.0.1-2.txt` (28.4 MB).
+- **AAPT2 Badging Analysis:**
+  - Package: `com.kern.launcher`
+  - Version Code: `2`
+  - Version Name: `1.0.1`
+  - Target SDK: `35`
+  - Compile SDK: `35`
+  - Launchable Activity: `com.kern.launcher.MainActivity`
+  - `application-debuggable`: ABSENT (verified non-debuggable release build)
+  - Declared Permissions:
+    - `android.permission.QUERY_ALL_PACKAGES`
+    - `com.android.alarm.permission.SET_ALARM`
+    - `com.kern.launcher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
+- **Signing Verification:** `SKIPPED (unsigned)` (signing environment variables not supplied; awaiting human Phase 12).
+- **R8 Reflection & Database Safety Audit:** Verified that `com.kern.launcher.data.room.AppDatabase_Impl` and DAOs are preserved without obfuscation via ProGuard rules, preventing runtime `ClassNotFoundException`.
+
 ## Artifacts
-- APK: pending (interim unsigned APK built at `app/build/outputs/apk/release/app-release-unsigned.apk`)
-- AAB: pending
-- R8 mapping: `app/build/outputs/mapping/release/mapping.txt`
+- APK: `release-artifacts/app-release-unsigned.apk`, 1.4 MB (1,381,562 bytes), SHA-256 `0459e99ec90d4dc50c9838d73da7fa020a5c31dc80912e94b99cc03328791497` (signed: no)
+- AAB: `release-artifacts/app-release.aab`, 3.2 MB (3,336,909 bytes), SHA-256 `9cb5eaa7cc19950d4a8d9e6a3a8f42afd1511e02998bdf1600dd93bf87d34749`
+- R8 mapping: `release-artifacts/mapping-1.0.1-2.txt`, 28.4 MB (28,389,673 bytes), SHA-256 `4112da511bcb2d1b9d241a1dbb9853d4103cf12547db22b46daef363547b9fc1`
 
 ## Findings (ordered by severity: Blocker, High, Medium, Low)
 ### F-001 Zero Unit Tests in Repository
@@ -268,6 +287,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - `release-prep: phase 5 security and privacy scan`: Performed static scans for logging, intents, URLs, blocking calls, audited DownloadDialog.kt, and added ProGuard log stripping rules.
 - `release-prep: phase 6 unit tests`: Implemented 38 unit tests across InputTokenizer, CommandParser, CalculatorEvaluator, SearchRanker, AliasRepository, and UserSettings with 100% pass rate.
 - `release-prep: phase 7 lint and style`: Fixed obsolete SDK qualifier directory, fixed SET_ALARM permission typo, handled QueryAllPackagesPermission lint error, added ktlint plugin in report-only mode, verified 0 TODO/FIXME markers, and verified lintRelease passed with 0 errors.
+- `release-prep: phase 8 release build and r8 verification`: Built release APK and bundle, verified R8 minification and resource shrinking, validated non-debuggability and badging via aapt2, preserved mapping file, and computed SHA-256 checksums.
 
 ## Human Actions Remaining
 - [ ] Generate or supply the release keystore; back it up in two locations.
