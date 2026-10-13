@@ -1,5 +1,5 @@
 # Release Preparation Report: Kern Launcher
-Date: 2026-10-13   Branch: release/prep-20261013   Commit: 6f6443a
+Date: 2026-10-13   Branch: release/prep-20261013   Commit: 9294bd4
 Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 
 ## Summary
@@ -11,7 +11,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 | Phase 3: Build Configuration | PASS | 1 | 2 | 0 |
 | Phase 4: Room & DataStore Safety | PASS | 2 | 1 | 0 |
 | Phase 5: Static Security & Privacy Scan | PASS | 1 | 1 | 0 |
-| Phase 6: Generate & Run Unit Tests | PENDING | 0 | 0 | 0 |
+| Phase 6: Generate & Run Unit Tests | PASS | 1 | 0 | 0 |
 | Phase 7: Lint & Style | PENDING | 0 | 0 | 0 |
 | Phase 8: Release Build & R8 Verification | PENDING | 0 | 0 | 0 |
 | Phase 9: Device Smoke Test | SKIPPED (no device) | 0 | 0 | 0 |
@@ -106,6 +106,56 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - **Review of `ui/components/DownloadDialog.kt`:**
   `DownloadDialog.kt` operates strictly as an on-device Intent and clipboard companion UI; it **does not download, transfer, parse, or execute** any media binaries or executable payloads directly. When presented with a user-supplied URL (or when reading a URL from the clipboard upon confirmation), it provides action cards that delegate the media link via standard Android `ACTION_SEND` (text) or `ACTION_VIEW` intents to local third-party applications (Seal `com.junkfood.seal`, YTDLnis `com.deniscerri.ytdl`, NewPipe `org.schabi.newpipe` / `org.schabi.newpipelegacy`) or opens the web browser to the Cobalt web service (`https://cobalt.tools`) or official GitHub project repositories (`https://github.com/junkfood02/Seal`, `https://github.com/deniscerri/ytdlnis`). All outbound URLs use encrypted `https://` (or user-entered `http://`/`https://` URLs). Because no file I/O or network connections are initiated by Kern Launcher itself, no files are stored on disk, no integrity hashes are checked within Kern, and no `android.permission.INTERNET` or storage permissions are requested or required. The component poses zero risk of untrusted arbitrary code execution within Kern Launcher.
 
+## Phase 6 Unit Test Execution Details
+- **Test Suite Command:** `./gradlew testDebugUnitTest --stacktrace` (PASSED in 0.111s, exit code 0).
+- **Total Tests:** 38 tests executed, 0 failures, 0 ignored (100% success rate).
+- **Test Results HTML Report:** `app/build/reports/tests/testDebugUnitTest/index.html`.
+- **Coverage Summary per Test Class:**
+  - `InputTokenizerTest` (9 tests, 100% pass):
+    - Empty string
+    - Whitespace only
+    - Single token
+    - Multiple spaces
+    - Quoted strings
+    - Unmatched quote
+    - Very long input (10 000 characters)
+    - Unicode and emoji
+    - Control characters
+  - `CommandParserTest` (5 test methods, 100% pass):
+    - Every built-in command with valid arguments (`help`, `hidden`, `tui`, `ai`, `down`, `log`, `maps`, `yt`, `spot`, `play`, `gh`, `wiki`, `reddit`, `x`, `ddg`, `g`, `timer` (h/m/s), `settings`, deep links)
+    - Commands with missing arguments
+    - Unknown command fallback
+    - Command with trailing whitespace
+    - Case variations (`HELP`, `Settings`, `TuI`, `TIMER 10M`)
+  - `CalculatorEvaluatorTest` (12 tests, 100% pass):
+    - Basic operators and precedence (`+`, `-`, `*`, `/`, `%`, `^`)
+    - Parentheses grouping
+    - Nested parentheses to depth 100
+    - Division by zero returns null
+    - Numerical overflow returns null
+    - Floating point format: `0.1 + 0.2` formats accurately to `"0.3"`
+    - Negative numbers
+    - Unary minus
+    - Empty / whitespace expression returns null
+    - Invalid character rejection returns null
+    - Extremely long expression (500 additions)
+    - Decimal separator handling
+  - `SearchRankerTest` (5 tests, 100% pass):
+    - Determinism for identical input
+    - Exact match outranks prefix match outranks substring match
+    - Usage count bonus influence
+    - Empty query scoring with recency/usage bonus
+    - Stable tie-breaking
+  - `AliasRepositoryTest` (5 tests, 100% pass):
+    - Create alias
+    - Duplicate alias replacement / upsert
+    - Delete alias
+    - Alias cycle detection & boundedness (single-step expansion prevents recursion)
+    - Alias shadowing built-in commands
+  - `UserSettingsTest` (2 tests, 100% pass):
+    - Default values verify exactly against documented specifications
+    - Data copy immutability and default preservation
+
 ## Artifacts
 - APK: pending (interim unsigned APK built at `app/build/outputs/apk/release/app-release-unsigned.apk`)
 - AAB: pending
@@ -118,7 +168,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - Location: `app/src/test/`
 - Evidence: `> Task :app:testDebugUnitTest NO-SOURCE`
 - Proposed action: Implement test suite covering InputTokenizer, CommandParser, CalculatorEvaluator, SearchRanker, AliasRepository, and UserSettings in Phase 6.
-- Status: open
+- Status: fixed in `release-prep: phase 6 unit tests` (38 tests created, 100% passing)
 
 ### F-002 Lint Error: QueryAllPackagesPermission
 - Phase: 1
@@ -200,6 +250,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - `release-prep: phase 3 build configuration`: Configured R8 minification, resource shrinking, non-fatal environment-based signing config, created `proguard-rules.pro`, updated `.gitignore`.
 - `release-prep: phase 4 room and datastore safety`: Enabled `exportSchema = true`, generated `2.json`, removed `fallbackToDestructiveMigration()`, added DataStore corruption handler, added Room testing & DAO round-trip test.
 - `release-prep: phase 5 security and privacy scan`: Performed static scans for logging, intents, URLs, blocking calls, audited DownloadDialog.kt, and added ProGuard log stripping rules.
+- `release-prep: phase 6 unit tests`: Implemented 38 unit tests across InputTokenizer, CommandParser, CalculatorEvaluator, SearchRanker, AliasRepository, and UserSettings with 100% pass rate.
 
 ## Human Actions Remaining
 - [ ] Generate or supply the release keystore; back it up in two locations.
