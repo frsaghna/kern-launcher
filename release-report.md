@@ -1,5 +1,5 @@
 # Release Preparation Report: Kern Launcher
-Date: 2026-10-13   Branch: release/prep-20261013   Commit: 2658d29
+Date: 2026-10-13   Branch: release/prep-20261013   Commit: 8eacefc
 Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 
 ## Summary
@@ -7,7 +7,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 |---|---|---|---|---|
 | Phase 0: Preflight | PASS | 0 | 0 | 0 |
 | Phase 1: Baseline Health | FAIL | 1 | 2 | 0 |
-| Phase 2: Manifest & Launcher Role Audit | PENDING | 0 | 0 | 0 |
+| Phase 2: Manifest & Launcher Role Audit | PASS | 0 | 4 | 0 |
 | Phase 3: Build Configuration | PENDING | 0 | 0 | 0 |
 | Phase 4: Room & DataStore Safety | PENDING | 0 | 0 | 0 |
 | Phase 5: Static Security & Privacy Scan | PENDING | 0 | 0 | 0 |
@@ -55,6 +55,26 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
     - `ObsoleteSdkInt` (1): `res/mipmap-anydpi-v26` qualifier redundant for minSdk 26
     - `MissingClass` (1): External package referenced in code
 
+## Phase 2 Manifest & Launcher Role Audit Details
+- **Merged Release Manifest Path:** `app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml`
+- **MainActivity Intent Filter:** PASS
+  - Actions: `android.intent.action.MAIN`
+  - Categories: `android.intent.category.HOME`, `android.intent.category.DEFAULT`, `android.intent.category.LAUNCHER`
+- **Launch Mode:** PASS (`singleTask`, configured on `MainActivity`).
+- **Export Declarations:** PASS. Every component declares explicit `android:exported`:
+  - `MainActivity`: `exported="true"` (Launcher activity)
+  - `androidx.startup.InitializationProvider`: `exported="false"`
+  - `androidx.room.MultiInstanceInvalidationService`: `exported="false"`
+  - `androidx.profileinstaller.ProfileInstallReceiver`: `exported="true"`, protected by `android.permission.DUMP`.
+- **Declared Permissions Audit:**
+  - `android.permission.QUERY_ALL_PACKAGES`: Used in `AppRepository.kt:81` for querying installed applications. Flagged as `F-004`.
+  - `android.permission.SET_ALARM`: Used in `CommandExecutor.kt` and `IntentFactory.kt`. Flagged as `F-003` (typo: should be `com.android.alarm.permission.SET_ALARM`).
+  - `com.kern.launcher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`: Signature-level protection for dynamic broadcast receivers.
+- **Backup Configuration:** `allowBackup="true"` without extraction rules. Flagged as `F-005`. Propose excluding Room database and DataStore.
+- **Cleartext Traffic & Security Config:** PASS. `usesCleartextTraffic` is absent (defaults to false on API 28+). `DownloadDialog.kt` performs no direct HTTP network requests.
+- **Debuggable in Release:** PASS (`android:debuggable` is not present in release manifest).
+- **Adaptive Icon Check:** FINDING `F-006`. Current launcher icon is a vector drawable in `res/drawable/ic_launcher.xml`; missing `res/mipmap-anydpi-v26/` adaptive icon with `<monochrome>` layer.
+
 ## Artifacts
 - APK: pending
 - AAB: pending
@@ -63,6 +83,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 ## Findings (ordered by severity: Blocker, High, Medium, Low)
 ### F-001 Zero Unit Tests in Repository
 - Phase: 1
+- Severity: High
 - Location: `app/src/test/`
 - Evidence: `> Task :app:testDebugUnitTest NO-SOURCE`
 - Proposed action: Implement test suite covering InputTokenizer, CommandParser, CalculatorEvaluator, SearchRanker, AliasRepository, and UserSettings in Phase 6.
@@ -70,20 +91,55 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 
 ### F-002 Lint Error: QueryAllPackagesPermission
 - Phase: 1
+- Severity: High
 - Location: `app/src/main/AndroidManifest.xml:4`
 - Evidence: `app/src/main/AndroidManifest.xml:4: Error: A <queries> declaration should generally be used instead of QUERY_ALL_PACKAGES; see https://g.co/dev/packagevisibility for details [QueryAllPackagesPermission]`
-- Proposed action: Review in Phase 2. AndroidManifest already declares `<queries>` for `MAIN`/`LAUNCHER` intents. If keeping `QUERY_ALL_PACKAGES`, Play Store declaration is required and lint error must be handled in Phase 7.
+- Proposed action: Address in lint configuration / Phase 7; see F-004.
+- Status: open
+
+### F-003 Manifest Permission Typo for Alarm
+- Phase: 2
+- Severity: Medium
+- Location: `app/src/main/AndroidManifest.xml:5`
+- Evidence: `<uses-permission android:name="android.permission.SET_ALARM" />` (Android framework defines `com.android.alarm.permission.SET_ALARM`).
+- Proposed action: Propose updating permission string to `com.android.alarm.permission.SET_ALARM`.
+- Status: open
+
+### F-004 Play Permission Declaration Required: QUERY_ALL_PACKAGES
+- Phase: 2
+- Severity: High
+- Location: `app/src/main/AndroidManifest.xml:4`
+- Evidence: `<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />`
+- Proposed action: [HUMAN] Google Play policy requires submitting a sensitive permission declaration form for `QUERY_ALL_PACKAGES`. As Kern Launcher is an Android Home/Launcher app, it falls within an permitted use case.
+  - *Alternative non-sensitive replacement:* `AndroidManifest.xml` already defines a `<queries>` block with `<intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent></queries>`. On Android 11+ (API 30+), this allows resolving all launcher activities without `QUERY_ALL_PACKAGES`. Removing `QUERY_ALL_PACKAGES` would eliminate the need for the Play declaration.
+- Status: open
+
+### F-005 Data Backup Enabled Without Exclusion Rules
+- Phase: 2
+- Severity: Medium
+- Location: `app/src/main/AndroidManifest.xml:47`
+- Evidence: `android:allowBackup="true"` without `dataExtractionRules` or `fullBackupContent`.
+- Proposed action: Configure `android:dataExtractionRules="@xml/data_extraction_rules"` and `android:fullBackupContent="@xml/backup_rules"` to exclude `databases/` (command history and sensitive user aliases) and `shared_prefs/` / `datastore/` from cloud backups.
+- Status: open
+
+### F-006 Missing Adaptive Icon with Monochrome Layer
+- Phase: 2
+- Severity: Low
+- Location: `app/src/main/res/`
+- Evidence: Launcher icon is provided as `res/drawable/ic_launcher.xml`. No `res/mipmap-anydpi-v26/` or `res/mipmap-anydpi/` exists with `<adaptive-icon>` and `<monochrome>` elements for Android 13+ themed icons.
+- Proposed action: Create adaptive launcher icon XML referencing foreground, background, and monochrome layers.
 - Status: open
 
 ## Changes Made
 - `release-prep: phase 0 preflight`: Initial preflight checks, environment capture, and initial release-report.md.
 - `release-prep: phase 1 baseline health`: Installed Temurin JDK 17 to `~/.jdks/temurin-17` and updated `gradlew` to ensure AGP/Gradle/JVM stability; recorded baseline health results.
+- `release-prep: phase 2 manifest audit`: Completed manifest, exported component, permission, and launcher role audit.
 
 ## Human Actions Remaining
 - [ ] Generate or supply the release keystore; back it up in two locations.
 - [ ] Provide signing environment variables for the final signed build.
 - [ ] Enrol in Play App Signing; create the Play Console app entry.
-- [ ] Complete the Play permission declaration (if `QUERY_ALL_PACKAGES` is used).
+- [ ] Complete the Play permission declaration (if `QUERY_ALL_PACKAGES` is used) (see F-004).
 - [ ] Complete the Data Safety form, content rating, target audience, and ads declaration.
 - [ ] Review and publish `PRIVACY.md` at a public URL.
 - [ ] Prepare the store listing: descriptions, 512 px icon, feature graphic, screenshots.
