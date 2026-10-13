@@ -1,5 +1,5 @@
 # Release Preparation Report: Kern Launcher
-Date: 2026-10-13   Branch: release/prep-20261013   Commit: 5f6db2f
+Date: 2026-10-13   Branch: release/prep-20261013   Commit: 00fb7b5
 Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 
 ## Summary
@@ -9,7 +9,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 | Phase 1: Baseline Health | FAIL | 1 | 2 | 0 |
 | Phase 2: Manifest & Launcher Role Audit | PASS | 0 | 4 | 0 |
 | Phase 3: Build Configuration | PASS | 1 | 2 | 0 |
-| Phase 4: Room & DataStore Safety | PENDING | 0 | 0 | 0 |
+| Phase 4: Room & DataStore Safety | PASS | 2 | 1 | 0 |
 | Phase 5: Static Security & Privacy Scan | PENDING | 0 | 0 | 0 |
 | Phase 6: Generate & Run Unit Tests | PENDING | 0 | 0 | 0 |
 | Phase 7: Lint & Style | PENDING | 0 | 0 | 0 |
@@ -87,6 +87,15 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - **Target SDK Review:** `targetSdk = 35` (Android 15), `versionCode = 2`. Flagged `F-008`.
 - **Verification Build:** PASS (`./gradlew assembleRelease --stacktrace` succeeded, output size: 1.38 MB).
 
+## Phase 4 Room & DataStore Safety Details
+- **Room Schema Export:** PASS (`exportSchema = true` enabled in `AppDatabase.kt`; KSP `room.schemaLocation` configured).
+- **Generated Schema:** Generated and committed `app/schemas/com.kern.launcher.data.room.AppDatabase/2.json`.
+- **Destructive Migration Removed:** PASS. Removed `.fallbackToDestructiveMigration()` from `AppDatabase.getInstance()`. Flagged `F-009` regarding database version 2 without prior version 1 schema.
+- **Test Infrastructure:** Added `androidx.room:room-testing:2.6.1` and linked schema directory in `androidTest` sourceSets assets.
+- **DAO Verification Test:** Created `app/src/androidTest/java/com/kern/launcher/data/room/AppDatabaseDaoTest.kt` verifying in-memory round trips across all DAOs (`AppUsageDao`, `CommandHistoryDao`, `AliasDao`, `HiddenAppDao`).
+- **SettingsDataStore Hardening:** PASS. Added `corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() }`. Confirmed all preference keys have non-null default fallbacks in `userSettings` Flow mapper.
+- **Threading and DAOs:** Verified all write operations in DAOs are `suspend` functions and query methods return `Flow` or `suspend`. Scanned codebase for `runBlocking` in `app/src/main` (0 matches).
+
 ## Artifacts
 - APK: pending (interim unsigned APK built at `app/build/outputs/apk/release/app-release-unsigned.apk`)
 - AAB: pending
@@ -158,11 +167,20 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - Proposed action: Per official Google Play policy ([Target SDK Requirements](https://developer.android.com/google/play/requirements/target-sdk)), apps submitted after August 31, 2024 must target Android 14 (API 34)+, and by August 31, 2025 must target Android 15 (API 35)+. Kern Launcher currently targets API 35 (Android 15), fully complying with current and upcoming requirements. No change needed.
 - Status: open
 
+### F-009 Database Version 2 Without Historical Version 1 Schema
+- Phase: 4
+- Severity: Medium
+- Location: `app/src/main/java/com/kern/launcher/data/room/AppDatabase.kt:23`
+- Evidence: Database `version = 2` is defined in initial repository commits with `fallbackToDestructiveMigration()` and without explicit `Migration(1, 2)` or `1.json` schema.
+- Proposed action: With `fallbackToDestructiveMigration()` now removed, any device running a hypothetical version 1 database would fail on upgrade. If version 2 was the first public release, database versioning should be stabilized at version 2 or explicit migrations added if schema changes occur in future versions.
+- Status: open
+
 ## Changes Made
 - `release-prep: phase 0 preflight`: Initial preflight checks, environment capture, and initial release-report.md.
 - `release-prep: phase 1 baseline health`: Installed Temurin JDK 17 to `~/.jdks/temurin-17` and updated `gradlew` to ensure AGP/Gradle/JVM stability; recorded baseline health results.
 - `release-prep: phase 2 manifest audit`: Completed manifest, exported component, permission, and launcher role audit.
 - `release-prep: phase 3 build configuration`: Configured R8 minification, resource shrinking, non-fatal environment-based signing config, created `proguard-rules.pro`, updated `.gitignore`.
+- `release-prep: phase 4 room and datastore safety`: Enabled `exportSchema = true`, generated `2.json`, removed `fallbackToDestructiveMigration()`, added DataStore corruption handler, added Room testing & DAO round-trip test.
 
 ## Human Actions Remaining
 - [ ] Generate or supply the release keystore; back it up in two locations.
