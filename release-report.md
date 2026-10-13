@@ -1,5 +1,5 @@
 # Release Preparation Report: Kern Launcher
-Date: 2026-10-13   Branch: release/prep-20261013   Commit: 00fb7b5
+Date: 2026-10-13   Branch: release/prep-20261013   Commit: 6f6443a
 Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 
 ## Summary
@@ -10,7 +10,7 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 | Phase 2: Manifest & Launcher Role Audit | PASS | 0 | 4 | 0 |
 | Phase 3: Build Configuration | PASS | 1 | 2 | 0 |
 | Phase 4: Room & DataStore Safety | PASS | 2 | 1 | 0 |
-| Phase 5: Static Security & Privacy Scan | PENDING | 0 | 0 | 0 |
+| Phase 5: Static Security & Privacy Scan | PASS | 1 | 1 | 0 |
 | Phase 6: Generate & Run Unit Tests | PENDING | 0 | 0 | 0 |
 | Phase 7: Lint & Style | PENDING | 0 | 0 | 0 |
 | Phase 8: Release Build & R8 Verification | PENDING | 0 | 0 | 0 |
@@ -96,6 +96,16 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - **SettingsDataStore Hardening:** PASS. Added `corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() }`. Confirmed all preference keys have non-null default fallbacks in `userSettings` Flow mapper.
 - **Threading and DAOs:** Verified all write operations in DAOs are `suspend` functions and query methods return `Flow` or `suspend`. Scanned codebase for `runBlocking` in `app/src/main` (0 matches).
 
+## Phase 5 Static Security & Privacy Scan Details
+- **Logging Scan:** PASS. Zero instances of `Log.[dviwe]`, `println`, or `Timber` detected in `app/src/main/java`. Added ProGuard `-assumenosideeffects` rules to `app/proguard-rules.pro` to ensure any framework logging is stripped from release binaries.
+- **PendingIntent & URI Safety:** PASS. Zero instances of `PendingIntent.get*` and zero instances of `Intent.parseUri` detected.
+- **ACTION_VIEW & URL Resolution:** PASS. All intent activations in `CommandExecutor` are wrapped in guarded `try / catch` blocks preventing unhandled `ActivityNotFoundException` crashes.
+- **Async & Threading Safety:** PASS. Zero usages of `GlobalScope` or `runBlocking` detected in `app/src/main/java`.
+- **Stack Trace Exposure:** Flagged `F-010` for 5 `.printStackTrace()` invocations inside exception catch blocks.
+- **WebView Usage:** PASS. Zero usages of `WebView`, `addJavascriptInterface`, or `setJavaScriptEnabled`.
+- **Review of `ui/components/DownloadDialog.kt`:**
+  `DownloadDialog.kt` operates strictly as an on-device Intent and clipboard companion UI; it **does not download, transfer, parse, or execute** any media binaries or executable payloads directly. When presented with a user-supplied URL (or when reading a URL from the clipboard upon confirmation), it provides action cards that delegate the media link via standard Android `ACTION_SEND` (text) or `ACTION_VIEW` intents to local third-party applications (Seal `com.junkfood.seal`, YTDLnis `com.deniscerri.ytdl`, NewPipe `org.schabi.newpipe` / `org.schabi.newpipelegacy`) or opens the web browser to the Cobalt web service (`https://cobalt.tools`) or official GitHub project repositories (`https://github.com/junkfood02/Seal`, `https://github.com/deniscerri/ytdlnis`). All outbound URLs use encrypted `https://` (or user-entered `http://`/`https://` URLs). Because no file I/O or network connections are initiated by Kern Launcher itself, no files are stored on disk, no integrity hashes are checked within Kern, and no `android.permission.INTERNET` or storage permissions are requested or required. The component poses zero risk of untrusted arbitrary code execution within Kern Launcher.
+
 ## Artifacts
 - APK: pending (interim unsigned APK built at `app/build/outputs/apk/release/app-release-unsigned.apk`)
 - AAB: pending
@@ -175,12 +185,21 @@ Environment: JDK 17 (Temurin 17.0.20.1) / Gradle 8.11.1, AGP 8.7.2, device: none
 - Proposed action: With `fallbackToDestructiveMigration()` now removed, any device running a hypothetical version 1 database would fail on upgrade. If version 2 was the first public release, database versioning should be stabilized at version 2 or explicit migrations added if schema changes occur in future versions.
 - Status: open
 
+### F-010 Standard Error Stack Trace Printing in Production Catch Blocks
+- Phase: 5
+- Severity: Low
+- Location: `CommandExecutor.kt:234`, `AppRepository.kt:70`, `IntentFactory.kt:314, 324, 344`
+- Evidence: Calls to `e.printStackTrace()` in catch blocks.
+- Proposed action: In release builds, uncaught exceptions should not dump to standard error streams; prefer silent fallback or logging guarded by `BuildConfig.DEBUG`.
+- Status: open
+
 ## Changes Made
 - `release-prep: phase 0 preflight`: Initial preflight checks, environment capture, and initial release-report.md.
 - `release-prep: phase 1 baseline health`: Installed Temurin JDK 17 to `~/.jdks/temurin-17` and updated `gradlew` to ensure AGP/Gradle/JVM stability; recorded baseline health results.
 - `release-prep: phase 2 manifest audit`: Completed manifest, exported component, permission, and launcher role audit.
 - `release-prep: phase 3 build configuration`: Configured R8 minification, resource shrinking, non-fatal environment-based signing config, created `proguard-rules.pro`, updated `.gitignore`.
 - `release-prep: phase 4 room and datastore safety`: Enabled `exportSchema = true`, generated `2.json`, removed `fallbackToDestructiveMigration()`, added DataStore corruption handler, added Room testing & DAO round-trip test.
+- `release-prep: phase 5 security and privacy scan`: Performed static scans for logging, intents, URLs, blocking calls, audited DownloadDialog.kt, and added ProGuard log stripping rules.
 
 ## Human Actions Remaining
 - [ ] Generate or supply the release keystore; back it up in two locations.

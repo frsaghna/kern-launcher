@@ -1,7 +1,11 @@
 # Proguard rules for Kern Launcher
 
-# Add project specific ProGuard rules here.
-# By default, the flags in this file are appended to flags specified
-# in /home/kimmi/Android/Sdk/tools/proguard/proguard-android.txt
-# You can edit the include path and order by changing the proguardFiles
-# directive in build.gradle.kts.
+# Strip logging in release builds to protect privacy
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+    public static int e(...);
+}
