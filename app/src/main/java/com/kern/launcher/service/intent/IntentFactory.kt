@@ -346,12 +346,10 @@ object IntentFactory {
         }
     }
 
-    const val PACKAGE_SEAL = "com.junkfood.seal"
     const val PACKAGE_YTDLNIS = "com.deniscerri.ytdl"
     const val PACKAGE_NEWPIPE = "org.schabi.newpipe"
     const val PACKAGE_NEWPIPE_LEGACY = "org.schabi.newpipelegacy"
     const val URL_COBALT_WEB = "https://cobalt.tools"
-    const val URL_SEAL_GITHUB = "https://github.com/JunkFood04/Seal/releases"
     const val URL_YTDLNIS_GITHUB = "https://github.com/deniscerri/ytdlnis/releases"
 
     fun isPackageInstalled(context: Context, packageName: String): Boolean {

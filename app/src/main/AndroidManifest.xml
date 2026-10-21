@@ -23,7 +23,6 @@
         <package android:name="com.sec.android.app.clockpackage" />
         <package android:name="com.google.android.deskclock" />
         <package android:name="com.android.deskclock" />
-        <package android:name="com.junkfood.seal" />
         <package android:name="com.deniscerri.ytdl" />
         <package android:name="org.schabi.newpipe" />
         <package android:name="org.schabi.newpipelegacy" />

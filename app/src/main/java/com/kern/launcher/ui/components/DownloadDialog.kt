@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -109,7 +108,6 @@ fun DownloadDialog(
         }
     }
 
-    val isSealInstalled = remember { IntentFactory.isPackageInstalled(context, IntentFactory.PACKAGE_SEAL) }
     val isYtdlnisInstalled = remember { IntentFactory.isPackageInstalled(context, IntentFactory.PACKAGE_YTDLNIS) }
     val isNewPipeInstalled = remember {
         IntentFactory.isPackageInstalled(context, IntentFactory.PACKAGE_NEWPIPE) ||
@@ -297,39 +295,13 @@ fun DownloadDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // 1. Seal Client Option
-                if (isSealInstalled) {
-                    DownloaderActionCard(
-                        title = "DOWNLOAD WITH SEAL",
-                        subtitle = "Material 3 yt-dlp client • Format picker & muxing",
-                        icon = Icons.Default.RocketLaunch,
-                        accentColor = MaterialTheme.colorScheme.primary,
-                        sharpCorners = sharpCorners,
-                        badge = "INSTALLED",
-                        onClick = {
-                            if (hasValidUrl) {
-                                try {
-                                    val intent = IntentFactory.createShareTextIntent(IntentFactory.PACKAGE_SEAL, urlInput)
-                                    context.startActivity(intent)
-                                    onDismiss()
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Could not launch Seal", Toast.LENGTH_SHORT).show()
-                                }
-                            } else {
-                                Toast.makeText(context, "Please enter a valid URL", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // 2. YTDLnis Client Option
+                // 1. YTDLnis Client Option
                 if (isYtdlnisInstalled) {
                     DownloaderActionCard(
                         title = "DOWNLOAD WITH YTDLNIS",
                         subtitle = "Advanced yt-dlp client • Terminal args & batch mode",
                         icon = Icons.Default.Terminal,
-                        accentColor = KernYellow,
+                        accentColor = MaterialTheme.colorScheme.primary,
                         sharpCorners = sharpCorners,
                         badge = "INSTALLED",
                         onClick = {
@@ -349,7 +321,7 @@ fun DownloadDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // 3. NewPipe Option
+                // 2. NewPipe Option
                 if (isNewPipeInstalled) {
                     val newPipePkg = if (IntentFactory.isPackageInstalled(context, IntentFactory.PACKAGE_NEWPIPE)) {
                         IntentFactory.PACKAGE_NEWPIPE
@@ -382,14 +354,14 @@ fun DownloadDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // 4. Fallback / Cobalt Web Downloader Option
+                // 3. Fallback / Cobalt Web Downloader Option
                 DownloaderActionCard(
                     title = "DOWNLOAD VIA COBALT (WEB)",
                     subtitle = "Fast, ad-free open-source downloader • 30+ sites",
                     icon = Icons.Default.Download,
-                    accentColor = if (!isSealInstalled && !isYtdlnisInstalled) MaterialTheme.colorScheme.primary else KernTextSecondary,
+                    accentColor = if (!isYtdlnisInstalled) MaterialTheme.colorScheme.primary else KernTextSecondary,
                     sharpCorners = sharpCorners,
-                    badge = if (!isSealInstalled && !isYtdlnisInstalled) "ONLINE" else null,
+                    badge = if (!isYtdlnisInstalled) "ONLINE" else null,
                     onClick = {
                         if (hasValidUrl) {
                             // Copy link to clipboard for convenience and open Cobalt
@@ -408,7 +380,7 @@ fun DownloadDialog(
                 )
 
                 // If no native yt-dlp app is installed, provide 1-tap install helper
-                if (!isSealInstalled && !isYtdlnisInstalled) {
+                if (!isYtdlnisInstalled) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Box(
                         modifier = Modifier
@@ -420,33 +392,22 @@ fun DownloadDialog(
                     ) {
                         Column {
                             Text(
-                                text = "Tip: Install Seal for seamless offline yt-dlp downloads on Android.",
+                                text = "Tip: Install YTDLnis for seamless offline yt-dlp downloads on Android.",
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = KernYellow,
                                     fontSize = 11.sp
                                 )
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(
-                                    onClick = {
-                                        context.startActivity(IntentFactory.createOpenUrlIntent(IntentFactory.URL_SEAL_GITHUB))
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = KernYellow),
-                                    shape = RoundedCornerShape(if (sharpCorners) 0.dp else 4.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("GET SEAL", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                                }
-                                OutlinedButton(
-                                    onClick = {
-                                        context.startActivity(IntentFactory.createOpenUrlIntent(IntentFactory.URL_YTDLNIS_GITHUB))
-                                    },
-                                    shape = RoundedCornerShape(if (sharpCorners) 0.dp else 4.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("GET YTDLNIS", fontSize = 11.sp)
-                                }
+                            Button(
+                                onClick = {
+                                    context.startActivity(IntentFactory.createOpenUrlIntent(IntentFactory.URL_YTDLNIS_GITHUB))
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = KernYellow),
+                                shape = RoundedCornerShape(if (sharpCorners) 0.dp else 4.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("GET YTDLNIS", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                             }
                         }
                     }

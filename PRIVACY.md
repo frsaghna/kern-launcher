@@ -36,7 +36,7 @@ All user data is stored exclusively on your device's private application storage
 Kern Launcher interacts with external apps strictly through standard Android `Intent` routing:
 - **Search & Deep Links**: When you execute commands like `g <query>`, `yt <query>`, `spot <query>`, or `ai <prompt>`, Kern passes your query to your device's installed web browser or relevant application via an Android `ACTION_VIEW` intent.
 - **yt-dlp Downloader Companion (`down` / `dl`)**:
-  - The companion dialog allows you to route media URLs to user-installed third-party downloader apps (Seal, YTDLnis) via `ACTION_SEND` intents, or to open public web services (such as Cobalt) in your browser.
+  - The companion dialog allows you to route media URLs to user-installed third-party downloader apps (YTDLnis, NewPipe) via `ACTION_SEND` intents, or to open public web services (such as Cobalt) in your browser.
   - Kern Launcher does not download, parse, store, or execute media files or remote binaries.
   - Clipboard access is triggered only when you tap the companion dialog or click paste/copy buttons.
 

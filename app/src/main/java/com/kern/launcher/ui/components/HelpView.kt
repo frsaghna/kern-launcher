@@ -55,7 +55,7 @@ fun HelpDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "KERN MANUAL v1.0.1",
+                        text = "KERN MANUAL v1.0.2",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -106,7 +106,7 @@ fun HelpDialog(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 HelpItem("ai <prompt>", "Ask AI provider (e.g. ai jelaskan relativitas)")
-                HelpItem("down / dl <link>", "Open yt-dlp downloader companion (Seal / YTDLnis / Cobalt)")
+                HelpItem("down / dl <link>", "Open yt-dlp downloader companion (YTDLnis / Cobalt)")
                 HelpItem("maps <location>", "Search location or directions on Google Maps")
                 HelpItem("timer <duration>", "Set countdown timer alarm (e.g., timer 20m, 30s)")
                 HelpItem("log <text>", "Send text note to LazyLogs app")

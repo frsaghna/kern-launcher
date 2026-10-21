@@ -31,7 +31,7 @@ To make Kern your primary home screen launcher:
 - **Deep Search Shortcuts**: Search directly inside YouTube, Spotify, GitHub, Wikipedia, Reddit, X (Twitter), DuckDuckGo, Google, and the Play Store.
 - **System Settings Index**: Query 25+ Android system settings pages directly using `set <query>` (e.g. `set wifi`, `set battery`, `set display`, `set dns`).
 - **Configurable AI Command**: Run `ai <prompt>` to query your preferred AI service (ChatGPT, Google Gemini, Perplexity, or Claude).
-- **yt-dlp Companion**: Run `down <link>` or `dl` to open an intent-based companion dialog routing media URLs to user-installed downloaders (Seal, YTDLnis) or web tools (Cobalt).
+- **yt-dlp Companion**: Run `down <link>` or `dl` to open an intent-based companion dialog routing media URLs to user-installed downloaders (YTDLnis, NewPipe) or web tools (Cobalt).
 - **Inline Calculator**: Type mathematical expressions directly into the command bar (e.g. `24 * 7`, `(12 + 8) / 4`, `2^8`) for instant answers.
 - **Native Deep Link Support**: Execute custom URI schemes (e.g. `lazylogs://add?text=lunch%2025k`) or use the built-in `log <text>` financial tracking shortcut.
 - **Built-in App & System Utilities**:
