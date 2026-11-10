@@ -14,7 +14,7 @@ class UserSettingsTest {
         // Theme and Visual defaults
         assertTrue("isDarkMode default should be true", settings.isDarkMode)
         assertTrue("isOledBlack default should be true", settings.isOledBlack)
-        assertEquals("VS_CODE_DARK", settings.themePalette)
+        assertEquals("OLEDBLACK", settings.themePalette)
         assertEquals("#0D1117", settings.customBgColor)
         assertEquals("#58A6FF", settings.customAccentColor)
         assertEquals("#C9D1D9", settings.customTextColor)

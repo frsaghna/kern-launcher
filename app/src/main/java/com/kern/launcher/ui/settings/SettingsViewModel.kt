@@ -3,12 +3,10 @@ package com.kern.launcher.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kern.launcher.data.datastore.SettingsDataStore
-import com.kern.launcher.data.repository.AliasRepository
 import com.kern.launcher.data.repository.AppRepository
 import com.kern.launcher.data.repository.CommandHistoryRepository
 import com.kern.launcher.data.repository.HiddenAppItem
 import com.kern.launcher.data.repository.HiddenAppRepository
-import com.kern.launcher.model.Alias
 import com.kern.launcher.model.AppInfo
 import com.kern.launcher.model.UserSettings
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,7 +16,6 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val settingsDataStore: SettingsDataStore,
-    private val aliasRepository: AliasRepository,
     private val historyRepository: CommandHistoryRepository,
     private val hiddenAppRepository: HiddenAppRepository,
     private val appRepository: AppRepository
@@ -26,9 +23,6 @@ class SettingsViewModel(
 
     val userSettings: StateFlow<UserSettings> = settingsDataStore.userSettings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserSettings())
-
-    val aliases: StateFlow<List<Alias>> = aliasRepository.getAllAliases()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val hiddenApps: StateFlow<List<HiddenAppItem>> = hiddenAppRepository.getHiddenApps()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -126,14 +120,6 @@ class SettingsViewModel(
 
     fun toggleShowAppListOutlines(enabled: Boolean) = viewModelScope.launch {
         settingsDataStore.setShowAppListOutlines(enabled)
-    }
-
-    fun addAlias(alias: String, target: String) = viewModelScope.launch {
-        aliasRepository.saveAlias(alias, target)
-    }
-
-    fun deleteAlias(alias: String) = viewModelScope.launch {
-        aliasRepository.deleteAlias(alias)
     }
 
     fun unhideApp(packageName: String) = viewModelScope.launch {

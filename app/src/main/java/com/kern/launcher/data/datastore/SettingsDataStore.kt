@@ -53,7 +53,7 @@ class SettingsDataStore(private val context: Context) {
         UserSettings(
             isDarkMode = prefs[Keys.DARK_MODE] ?: true,
             isOledBlack = prefs[Keys.OLED_BLACK] ?: true,
-            themePalette = prefs[Keys.THEME_PALETTE] ?: "VS_CODE_DARK",
+            themePalette = prefs[Keys.THEME_PALETTE] ?: "OLEDBLACK",
             customBgColor = prefs[Keys.CUSTOM_BG_COLOR] ?: "#0D1117",
             customAccentColor = prefs[Keys.CUSTOM_ACCENT_COLOR] ?: "#58A6FF",
             customTextColor = prefs[Keys.CUSTOM_TEXT_COLOR] ?: "#C9D1D9",

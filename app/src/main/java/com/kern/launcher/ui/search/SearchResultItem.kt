@@ -152,7 +152,6 @@ fun SearchResultIcon(result: SearchResult, sharpCorners: Boolean) {
             is Command.Timer -> Icons.Default.Timer to MaterialTheme.colorScheme.primary
             is Command.MediaDownload -> Icons.Default.Download to MaterialTheme.colorScheme.primary
             is Command.OpenSettings -> Icons.Default.Settings to MaterialTheme.colorScheme.primary
-            is Command.CustomAlias -> Icons.Default.Code to KernGreen
             else -> when (result.type) {
                 SearchResultType.HISTORY -> Icons.Default.History to KernTextMuted
                 else -> Icons.Default.Search to KernTextSecondary

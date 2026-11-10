@@ -11,31 +11,26 @@ class CommandParserTest {
     fun testBuiltInCommandsWithValidArguments() {
         assertTrue(CommandParser.parse("help") is Command.Help)
         assertTrue(CommandParser.parse("?") is Command.Help)
-        assertTrue(CommandParser.parse("manual") is Command.Help)
 
         assertTrue(CommandParser.parse("hidden") is Command.ShowHiddenApps)
-        assertTrue(CommandParser.parse("hiddenapps") is Command.ShowHiddenApps)
-        assertTrue(CommandParser.parse("secret") is Command.ShowHiddenApps)
 
         assertTrue(CommandParser.parse("tui") is Command.ToggleTuiView)
-        assertTrue(CommandParser.parse("tuiview") is Command.ToggleTuiView)
-        assertTrue(CommandParser.parse("terminal") is Command.ToggleTuiView)
 
         val ai = CommandParser.parse("ai summarize this text")
         assertTrue(ai is Command.AiSearch)
         assertEquals("summarize this text", (ai as Command.AiSearch).prompt)
 
-        val down = CommandParser.parse("down https://youtu.be/dQw4w9WgXcQ")
-        assertTrue(down is Command.MediaDownload)
-        assertEquals("https://youtu.be/dQw4w9WgXcQ", (down as Command.MediaDownload).url)
+        val dl = CommandParser.parse("dl https://youtu.be/dQw4w9WgXcQ")
+        assertTrue(dl is Command.MediaDownload)
+        assertEquals("https://youtu.be/dQw4w9WgXcQ", (dl as Command.MediaDownload).url)
 
         val log = CommandParser.parse("log buy groceries")
         assertTrue(log is Command.LazyLogsAdd)
         assertEquals("buy groceries", (log as Command.LazyLogsAdd).rawText)
 
-        val maps = CommandParser.parse("maps central park")
-        assertTrue(maps is Command.GoogleMaps)
-        assertEquals("central park", (maps as Command.GoogleMaps).query)
+        val map = CommandParser.parse("map central park")
+        assertTrue(map is Command.GoogleMaps)
+        assertEquals("central park", (map as Command.GoogleMaps).query)
 
         val yt = CommandParser.parse("yt lofi hip hop")
         assertTrue(yt is Command.YoutubeSearch)
@@ -45,9 +40,9 @@ class CommandParserTest {
         assertTrue(spot is Command.SpotifySearch)
         assertEquals("daft punk", (spot as Command.SpotifySearch).query)
 
-        val play = CommandParser.parse("play termux")
-        assertTrue(play is Command.PlayStoreSearch)
-        assertEquals("termux", (play as Command.PlayStoreSearch).query)
+        val ps = CommandParser.parse("ps termux")
+        assertTrue(ps is Command.PlayStoreSearch)
+        assertEquals("termux", (ps as Command.PlayStoreSearch).query)
 
         val gh = CommandParser.parse("gh torvalds")
         assertTrue(gh is Command.GithubSearch)
@@ -57,17 +52,13 @@ class CommandParserTest {
         assertTrue(wiki is Command.WikipediaSearch)
         assertEquals("rust language", (wiki as Command.WikipediaSearch).query)
 
-        val reddit = CommandParser.parse("reddit androiddev")
-        assertTrue(reddit is Command.RedditSearch)
-        assertEquals("androiddev", (reddit as Command.RedditSearch).query)
+        val r = CommandParser.parse("r androiddev")
+        assertTrue(r is Command.RedditSearch)
+        assertEquals("androiddev", (r as Command.RedditSearch).query)
 
         val x = CommandParser.parse("x kotlin")
         assertTrue(x is Command.TwitterSearch)
         assertEquals("kotlin", (x as Command.TwitterSearch).query)
-
-        val ddg = CommandParser.parse("ddg duckduckgo search")
-        assertTrue(ddg is Command.DuckDuckGoSearch)
-        assertEquals("duckduckgo search", (ddg as Command.DuckDuckGoSearch).query)
 
         val g = CommandParser.parse("g google query")
         assertTrue(g is Command.GoogleSearch)
@@ -85,9 +76,8 @@ class CommandParserTest {
         assertTrue(timer3 is Command.Timer)
         assertEquals(45, (timer3 as Command.Timer).durationSeconds)
 
-        assertTrue(CommandParser.parse("settings") is Command.OpenSettings)
-        assertTrue(CommandParser.parse("config") is Command.OpenSettings)
         assertTrue(CommandParser.parse("pref") is Command.OpenSettings)
+        assertTrue(CommandParser.parse("conf") is Command.OpenSettings)
 
         val deepLink = CommandParser.parse("https://github.com/frsaghna/kern-launcher")
         assertTrue(deepLink is Command.DeepLinkUri)
@@ -100,9 +90,9 @@ class CommandParserTest {
         assertTrue(ai is Command.AiSearch)
         assertEquals("", (ai as Command.AiSearch).prompt)
 
-        val down = CommandParser.parse("down")
-        assertTrue(down is Command.MediaDownload)
-        assertEquals("", (down as Command.MediaDownload).url)
+        val dl = CommandParser.parse("dl")
+        assertTrue(dl is Command.MediaDownload)
+        assertEquals("", (dl as Command.MediaDownload).url)
 
         val log = CommandParser.parse("log")
         assertTrue(log is Command.LazyLogsAdd)
@@ -135,7 +125,8 @@ class CommandParserTest {
     @Test
     fun testCaseVariations() {
         assertTrue(CommandParser.parse("HELP") is Command.Help)
-        assertTrue(CommandParser.parse("Settings") is Command.OpenSettings)
+        assertTrue(CommandParser.parse("PREF") is Command.OpenSettings)
+        assertTrue(CommandParser.parse("CONF") is Command.OpenSettings)
         assertTrue(CommandParser.parse("TuI") is Command.ToggleTuiView)
         val timer = CommandParser.parse("TIMER 10M")
         assertTrue(timer is Command.Timer)

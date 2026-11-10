@@ -20,7 +20,10 @@ data class PaletteColors(
     val text: Color
 )
 
+val DEFAULT_PALETTE = PaletteColors(Color(0xFF000000), Color(0xFFFFFFFF), Color(0xFFFFFFFF))
+
 val MONKEYTYPE_PALETTES = mapOf(
+    "OLEDBLACK" to DEFAULT_PALETTE,
     "SERIKA_DARK" to PaletteColors(Color(0xFF323437), Color(0xFFE2B714), Color(0xFFD1D0C5)),
     "BOTANICAL" to PaletteColors(Color(0xFF7B9E87), Color(0xFFEAF0CE), Color(0xFFF1F7ED)),
     "CHARCOAL" to PaletteColors(Color(0xFF0F0F0F), Color(0xFFE6E6E6), Color(0xFFCCCCCC)),
@@ -31,7 +34,6 @@ val MONKEYTYPE_PALETTES = mapOf(
     "VAPORWAVE" to PaletteColors(Color(0xFF1A0933), Color(0xFFFF71CE), Color(0xFF01CDFE)),
     "BENTO" to PaletteColors(Color(0xFF2D394D), Color(0xFFFF6961), Color(0xFFFFFDF5)),
     "CARBON" to PaletteColors(Color(0xFF313131), Color(0xFFF66E0D), Color(0xFFF5E6C8)),
-    "OLED_BLACK" to PaletteColors(Color(0xFF000000), Color(0xFF00FF66), Color(0xFFFFFFFF)),
     "SOYUZ" to PaletteColors(Color(0xFF8B0000), Color(0xFFFFD700), Color(0xFFFFFFFF)),
     "HAMMERHEAD" to PaletteColors(Color(0xFF030613), Color(0xFF4FCDA5), Color(0xFFE2F1F5)),
     "TAROT" to PaletteColors(Color(0xFF130F1A), Color(0xFFC39A6B), Color(0xFFE6D3B3)),
@@ -85,12 +87,15 @@ fun getThemeColorScheme(palette: String, userSettings: UserSettings = UserSettin
             parseHexColor(userSettings.customTextColor, Color(0xFFC9D1D9))
         )
     } else {
-        val theme = MONKEYTYPE_PALETTES[key] ?: MONKEYTYPE_PALETTES["SERIKA_DARK"] ?: PaletteColors(Color(0xFF323437), Color(0xFFE2B714), Color(0xFFD1D0C5))
+        val theme = when (key) {
+            "OLED_BLACK", "OLED_MONOCHROME" -> DEFAULT_PALETTE
+            else -> MONKEYTYPE_PALETTES[key] ?: DEFAULT_PALETTE
+        }
         Triple(theme.bg, theme.accent, theme.text)
     }
 
     val onVariantText = text.copy(alpha = 0.7f)
-    val surfaceColor = bg.copy(alpha = 0.9f)
+    val surfaceColor = if (bg == Color(0xFF000000)) Color(0xFF121212) else bg.copy(alpha = 0.9f)
 
     return darkColorScheme(
         primary = accent,

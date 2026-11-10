@@ -33,7 +33,8 @@ fun ClockView(
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = Date()
-            delay(1000)
+            val millisUntilNextMinute = 60_000L - (System.currentTimeMillis() % 60_000L)
+            delay(millisUntilNextMinute.coerceAtLeast(1000L))
         }
     }
 

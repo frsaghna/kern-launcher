@@ -5,6 +5,27 @@ All notable changes to Kern Launcher will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-11-10
+
+### Added
+- **OLED Black Theme (Default)**: Introduced 0-saturation pure black (`oledblack` / `#000000`) theme palette with high-contrast monochrome text and accents, optimized for OLED displays and battery savings. Set as the default theme.
+- **Short Canonical Shortcuts**: Canonical command keywords streamlined to preferred short forms (`dl`, `map`, `spot`, `ps`, `gh`, `wiki`, `r`, `x`, `g`, `log`, `tui`, `hidden`, `pref`, `conf`, `?`, `timer`, `ai`).
+- **Launcher Preferences Command (`pref` / `conf`)**: Dedicated shortcuts `pref` and `conf` to open launcher settings, freeing `settings` to open the phone's system Settings app without collision.
+- **Direct Google Search App Integration**: Updated `g <query>` to open native Google Search app (`com.google.android.googlequicksearchbox` via `ACTION_WEB_SEARCH`) instead of generic browser tab.
+- **Icon Caching & Background App Scanning**: Added in-memory icon cache with `ConcurrentHashMap` and offloaded app list scanning to `Dispatchers.IO` for instantaneous search response.
+- **Fixed Fallback Release Signing**: Added fallback signing configuration to `app/build.gradle.kts` for direct local testing and sideloading of minified release builds.
+
+### Removed
+- **Custom Aliases Feature**: Removed custom alias manager, settings card, and resolution logic to reduce complexity and avoid query shadowing.
+- **Redundant Synonyms**: Removed redundant command synonyms (`maps`, `spotify`, `music`, `play`, `store`, `github`, `wikipedia`, `reddit`, `tw`, `twitter`, `duck`, `google`, `down`, `ytdl`, `lazylogs`, `tuiview`, `terminal`, `hiddenapps`, `secret`, `config`, `manual`).
+- **DuckDuckGo Shortcut**: Removed `ddg` command per user preference.
+
+### Fixed
+- **Android 15 / Modern OS Back Gesture Conflict**: Fixed root touch gesture interception on `HomeScreen.kt` and made `BackHandler` conditional on idle state so modern Android predictive back gestures and system navigation work seamlessly without lag or "not optimized" system warnings.
+- **Clock Recomposition Lag**: Optimized `ClockView` and `DateView` recompositions from 1-second ticks to minute-boundary alignment, eliminating idle UI re-renders.
+
+---
+
 ## [1.0.2] - 2026-10-21
 
 ### Added

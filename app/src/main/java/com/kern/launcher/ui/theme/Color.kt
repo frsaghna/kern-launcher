@@ -56,12 +56,12 @@ val OledMonoSurface = Color(0xFF141414)
 val OledMonoBorder = Color(0xFF2B2B2B)
 val OledMonoAccent = Color(0xFFFFFFFF)
 
-// General Text & State colors
-val KernDarkSurfaceBorder = Color(0xFF2D323E)
+// General Text & State colors (Achromatic 0% saturation)
+val KernDarkSurfaceBorder = Color(0xFF262626)
 
-val KernTextPrimary = Color(0xFFF1F5F9)
-val KernTextSecondary = Color(0xFF94A3B8)
-val KernTextMuted = Color(0xFF64748B)
+val KernTextPrimary = Color(0xFFF5F5F5)
+val KernTextSecondary = Color(0xFFA0A0A0)
+val KernTextMuted = Color(0xFF707070)
 
 val KernGreen = Color(0xFF4ADE80)
 val KernYellow = Color(0xFFFACC15)

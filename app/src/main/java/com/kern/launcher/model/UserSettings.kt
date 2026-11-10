@@ -3,7 +3,7 @@ package com.kern.launcher.model
 data class UserSettings(
     val isDarkMode: Boolean = true,
     val isOledBlack: Boolean = true,
-    val themePalette: String = "VS_CODE_DARK", // VS_CODE_DARK, OLED_MONOCHROME, DRACULA, MONOKAI, ONE_DARK, TOKYO_NIGHT, GRUVBOX, NORD, CYBERPUNK, CUSTOM
+    val themePalette: String = "OLEDBLACK", // OLEDBLACK, VS_CODE_DARK, OLED_MONOCHROME, DRACULA, MONOKAI, ONE_DARK, TOKYO_NIGHT, GRUVBOX, NORD, CYBERPUNK, CUSTOM
     val customBgColor: String = "#0D1117",
     val customAccentColor: String = "#58A6FF",
     val customTextColor: String = "#C9D1D9",

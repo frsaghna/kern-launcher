@@ -5,12 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kern.launcher.command.executor.CommandExecutor
 import com.kern.launcher.data.datastore.SettingsDataStore
-import com.kern.launcher.data.repository.AliasRepository
 import com.kern.launcher.data.repository.AppRepository
 import com.kern.launcher.data.repository.CommandHistoryRepository
 import com.kern.launcher.data.repository.HiddenAppItem
 import com.kern.launcher.data.repository.HiddenAppRepository
-import com.kern.launcher.model.Alias
 import com.kern.launcher.model.AppInfo
 import com.kern.launcher.model.CommandHistoryItem
 import com.kern.launcher.model.SearchResult
@@ -30,7 +28,6 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     private val appRepository: AppRepository,
     private val historyRepository: CommandHistoryRepository,
-    private val aliasRepository: AliasRepository,
     private val hiddenAppRepository: HiddenAppRepository,
     private val settingsDataStore: SettingsDataStore,
     context: Context
@@ -53,9 +50,6 @@ class HomeViewModel(
     private val installedApps: StateFlow<List<AppInfo>> = appRepository.getInstalledAppsFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val aliases: StateFlow<List<Alias>> = aliasRepository.getAllAliases()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
     val hiddenApps: StateFlow<List<HiddenAppItem>> = hiddenAppRepository.getHiddenApps()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -65,12 +59,11 @@ class HomeViewModel(
     val searchResults: StateFlow<List<SearchResult>> = combine(
         _query,
         installedApps,
-        aliases,
         hiddenApps,
         userSettings
-    ) { queryText, appsList, aliasList, hiddenList, settings ->
+    ) { queryText, appsList, hiddenList, settings ->
         val hiddenPkgs = hiddenList.map { it.packageName }.toSet()
-        searchEngine.search(queryText, appsList, aliasList, hiddenPkgs, aiProvider = settings.aiProvider)
+        searchEngine.search(queryText, appsList, hiddenPkgs, aiProvider = settings.aiProvider)
     }
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -80,13 +73,12 @@ class HomeViewModel(
             searchResults.collect { results ->
                 val currentQuery = _query.value.trim().lowercase()
                 val builtinKeywords = listOf(
-                    "settings", "setting", "config", "pref", "kern", "set",
-                    "help", "?", "manual", "tui", "tuiview", "terminal",
-                    "hidden", "hiddenapps", "secret", "info", "hide", "unhide",
-                    "ai", "log", "lazylogs", "timer", "down", "dl", "ytdl",
-                    "g", "google", "yt", "spot", "spotify", "music",
-                    "play", "store", "ps", "gh", "github", "wiki", "wikipedia",
-                    "reddit", "r", "x", "tw", "twitter", "ddg", "duck", "maps", "map"
+                    "pref", "conf", "set", "help", "?", "tui",
+                    "hidden", "info", "hide", "unhide",
+                    "ai", "log", "timer", "dl",
+                    "g", "yt", "spot",
+                    "ps", "gh", "wiki",
+                    "r", "x", "map"
                 )
 
                 // Check if current query is a prefix of any built-in command keyword
@@ -97,9 +89,8 @@ class HomeViewModel(
                 if (currentQuery.isNotEmpty() && !isBuiltinPrefix && userSettings.value.autoLaunchSingleMatch) {
                     val appResults = results.filter { it.type == SearchResultType.APP }
                     val builtinResults = results.filter { it.type == SearchResultType.BUILTIN_COMMAND && it.id != "fallback_search" }
-                    val aliasResults = results.filter { it.type == SearchResultType.ALIAS }
 
-                    if (appResults.size == 1 && builtinResults.isEmpty() && aliasResults.isEmpty()) {
+                    if (appResults.size == 1 && builtinResults.isEmpty()) {
                         val singleApp = appResults.first()
                         executeResult(singleApp, onOpenSettings = {}, onOpenHelp = {}, onOpenHiddenApps = {})
                     }

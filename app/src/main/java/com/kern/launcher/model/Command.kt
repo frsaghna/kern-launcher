@@ -11,7 +11,6 @@ sealed class Command {
     data class WikipediaSearch(val query: String) : Command()
     data class RedditSearch(val query: String) : Command()
     data class TwitterSearch(val query: String) : Command()
-    data class DuckDuckGoSearch(val query: String) : Command()
     data class AiSearch(val prompt: String, val provider: String = "CHATGPT") : Command()
     data class LazyLogsAdd(val rawText: String) : Command()
     data class DeepLinkUri(val uriString: String, val label: String) : Command()
@@ -25,6 +24,5 @@ sealed class Command {
     data object OpenSettings : Command()
     data object Help : Command()
     data class MediaDownload(val url: String) : Command()
-    data class CustomAlias(val alias: String, val resolvedCommand: Command) : Command()
     data class Unknown(val rawQuery: String) : Command()
 }

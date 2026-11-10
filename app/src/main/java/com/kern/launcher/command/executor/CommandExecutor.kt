@@ -85,7 +85,7 @@ class CommandExecutor(
                 }
                 is Command.GoogleMaps -> {
                     context.startActivity(IntentFactory.createGoogleMapsIntent(context, command.query))
-                    historyRepository.recordCommand(if (command.query.isNotBlank()) "maps ${command.query}" else "maps")
+                    historyRepository.recordCommand(if (command.query.isNotBlank()) "map ${command.query}" else "map")
                     true
                 }
                 is Command.YoutubeSearch -> {
@@ -100,7 +100,7 @@ class CommandExecutor(
                 }
                 is Command.PlayStoreSearch -> {
                     context.startActivity(IntentFactory.createPlayStoreSearchIntent(context, command.query))
-                    historyRepository.recordCommand(if (command.query.isNotBlank()) "play ${command.query}" else "play")
+                    historyRepository.recordCommand(if (command.query.isNotBlank()) "ps ${command.query}" else "ps")
                     true
                 }
                 is Command.GithubSearch -> {
@@ -115,17 +115,12 @@ class CommandExecutor(
                 }
                 is Command.RedditSearch -> {
                     context.startActivity(IntentFactory.createRedditSearchIntent(context, command.query))
-                    historyRepository.recordCommand(if (command.query.isNotBlank()) "reddit ${command.query}" else "reddit")
+                    historyRepository.recordCommand(if (command.query.isNotBlank()) "r ${command.query}" else "r")
                     true
                 }
                 is Command.TwitterSearch -> {
                     context.startActivity(IntentFactory.createTwitterSearchIntent(context, command.query))
                     historyRepository.recordCommand(if (command.query.isNotBlank()) "x ${command.query}" else "x")
-                    true
-                }
-                is Command.DuckDuckGoSearch -> {
-                    context.startActivity(IntentFactory.createDuckDuckGoSearchIntent(context, command.query))
-                    historyRepository.recordCommand(if (command.query.isNotBlank()) "ddg ${command.query}" else "ddg")
                     true
                 }
                 is Command.Timer -> {
@@ -216,11 +211,8 @@ class CommandExecutor(
                 }
                 is Command.MediaDownload -> {
                     onOpenDownloader(command.url)
-                    historyRepository.recordCommand(if (command.url.isNotBlank()) "down ${command.url}" else "down")
+                    historyRepository.recordCommand(if (command.url.isNotBlank()) "dl ${command.url}" else "dl")
                     true
-                }
-                is Command.CustomAlias -> {
-                    execute(command.resolvedCommand, onOpenSettings, onOpenHelp, onOpenHiddenApps, onToggleTuiView, onOpenDownloader)
                 }
                 is Command.Unknown -> {
                     if (command.rawQuery.isNotBlank()) {

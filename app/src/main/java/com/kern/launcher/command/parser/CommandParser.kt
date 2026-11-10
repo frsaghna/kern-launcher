@@ -11,27 +11,26 @@ object CommandParser {
         val tokenized = InputTokenizer.tokenize(trimmed)
 
         return when (tokenized.keyword) {
-            "help", "?", "manual" -> Command.Help
-            "hidden", "hiddenapps", "secret" -> Command.ShowHiddenApps
-            "tui", "tuiview", "terminal" -> Command.ToggleTuiView
+            "help", "?" -> Command.Help
+            "hidden" -> Command.ShowHiddenApps
+            "tui" -> Command.ToggleTuiView
             "ai" -> Command.AiSearch(prompt = tokenized.args)
-            "down", "dl", "ytdl" -> Command.MediaDownload(url = tokenized.args)
-            "log", "lazylogs" -> Command.LazyLogsAdd(rawText = tokenized.args)
-            "maps", "map" -> Command.GoogleMaps(tokenized.args)
+            "dl" -> Command.MediaDownload(url = tokenized.args)
+            "log" -> Command.LazyLogsAdd(rawText = tokenized.args)
+            "map" -> Command.GoogleMaps(tokenized.args)
             "yt" -> Command.YoutubeSearch(tokenized.args)
-            "spot", "spotify", "music" -> Command.SpotifySearch(tokenized.args)
-            "play", "store", "ps" -> Command.PlayStoreSearch(tokenized.args)
-            "gh", "github" -> Command.GithubSearch(tokenized.args)
-            "wiki", "wikipedia" -> Command.WikipediaSearch(tokenized.args)
-            "reddit", "r" -> Command.RedditSearch(tokenized.args)
-            "x", "tw", "twitter" -> Command.TwitterSearch(tokenized.args)
-            "ddg", "duck" -> Command.DuckDuckGoSearch(tokenized.args)
-            "g", "google" -> Command.GoogleSearch(tokenized.args)
+            "spot" -> Command.SpotifySearch(tokenized.args)
+            "ps" -> Command.PlayStoreSearch(tokenized.args)
+            "gh" -> Command.GithubSearch(tokenized.args)
+            "wiki" -> Command.WikipediaSearch(tokenized.args)
+            "r" -> Command.RedditSearch(tokenized.args)
+            "x" -> Command.TwitterSearch(tokenized.args)
+            "g" -> Command.GoogleSearch(tokenized.args)
             "timer" -> {
                 val seconds = parseDurationSeconds(tokenized.args)
                 Command.Timer(durationSeconds = seconds, rawInput = tokenized.args)
             }
-            "settings", "config", "pref" -> Command.OpenSettings
+            "pref", "conf" -> Command.OpenSettings
             else -> {
                 if (trimmed.contains("://")) {
                     Command.DeepLinkUri(trimmed, "Open Deep Link")

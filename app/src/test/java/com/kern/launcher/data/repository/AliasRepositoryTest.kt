@@ -65,11 +65,11 @@ class AliasRepositoryTest {
     @Test
     fun testDuplicateNameReplacesExisting() = runBlocking {
         repository.saveAlias("search", "g first search")
-        repository.saveAlias("search", "ddg second search")
+        repository.saveAlias("search", "spot second search")
 
         val alias = repository.getAlias("search")
         assertNotNull(alias)
-        assertEquals("ddg second search", alias?.targetCommandOrPackage)
+        assertEquals("spot second search", alias?.targetCommandOrPackage)
 
         val all = repository.getAllAliases().first()
         assertEquals(1, all.size)

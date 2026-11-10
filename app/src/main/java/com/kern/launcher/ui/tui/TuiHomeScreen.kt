@@ -72,7 +72,6 @@ fun TuiHomeScreen(
     val searchResults by viewModel.searchResults.collectAsState()
     val selectedIndex by viewModel.selectedIndex.collectAsState()
     val userSettings by viewModel.userSettings.collectAsState()
-    val aliases by viewModel.aliases.collectAsState()
     val hiddenApps by viewModel.hiddenApps.collectAsState()
     val context = LocalContext.current
 
@@ -108,7 +107,6 @@ fun TuiHomeScreen(
 
     if (showHelpDialog) {
         HelpDialog(
-            aliases = aliases,
             sharpCorners = true,
             onDismiss = { showHelpDialog = false }
         )

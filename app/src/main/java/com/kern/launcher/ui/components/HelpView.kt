@@ -27,12 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.kern.launcher.model.Alias
 import com.kern.launcher.ui.theme.KernTextSecondary
 
 @Composable
 fun HelpDialog(
-    aliases: List<Alias>,
     sharpCorners: Boolean,
     onDismiss: () -> Unit
 ) {
@@ -55,7 +53,7 @@ fun HelpDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "KERN MANUAL v1.0.2",
+                        text = "KERN MANUAL v1.0.3",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -84,14 +82,14 @@ fun HelpDialog(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                HelpItem("settings / config / pref", "Open full Launcher Settings screen (configure themes, fonts, clock, & gestures)")
-                HelpItem("help / ?", "Display this help manual")
+                HelpItem("pref / conf", "Open launcher preferences (configure themes, fonts, clock, & gestures)")
+                HelpItem("? / help", "Display this help manual")
                 HelpItem("set <query>", "Search 25+ Android System Settings (e.g. set wifi, set battery, set dns)")
-                HelpItem("tui / tuiview", "Toggle experimental retro TUI Mode")
+                HelpItem("tui", "Toggle experimental retro TUI Mode")
                 HelpItem("info <app>", "Open system settings page for an app")
                 HelpItem("hide <app>", "Hide app from launcher search results")
                 HelpItem("unhide <app>", "Restore hidden app back to search results")
-                HelpItem("hidden / secret", "View and manage all hidden applications")
+                HelpItem("hidden", "View and manage all hidden applications")
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -105,44 +103,20 @@ fun HelpDialog(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                HelpItem("ai <prompt>", "Ask AI provider (e.g. ai jelaskan relativitas)")
-                HelpItem("down / dl <link>", "Open yt-dlp downloader companion (YTDLnis / Cobalt)")
-                HelpItem("maps <location>", "Search location or directions on Google Maps")
+                HelpItem("ai <prompt>", "Ask AI provider (e.g. ai explain relativity)")
+                HelpItem("dl <link>", "Open yt-dlp downloader companion (YTDLnis / Cobalt)")
+                HelpItem("map <location>", "Search location or directions on Google Maps")
                 HelpItem("timer <duration>", "Set countdown timer alarm (e.g., timer 20m, 30s)")
                 HelpItem("log <text>", "Send text note to LazyLogs app")
                 HelpItem("<scheme>://...", "Direct execute any custom App Deep Link URI")
-                HelpItem("g <query>", "Search web on Google Search")
+                HelpItem("g <query>", "Search on Google Search app")
                 HelpItem("yt <query>", "Search videos on YouTube app")
-                HelpItem("spot / music <query>", "Search music on Spotify app")
-                HelpItem("play / store <query>", "Search apps on Play Store")
+                HelpItem("spot <query>", "Search music on Spotify app")
+                HelpItem("ps <query>", "Search apps on Play Store")
                 HelpItem("gh <query>", "Search repositories on GitHub")
                 HelpItem("wiki <query>", "Search articles on Wikipedia")
-                HelpItem("reddit / r <query>", "Search posts/subreddits on Reddit")
-                HelpItem("x / tw <query>", "Search tweets on X / Twitter")
-                HelpItem("ddg <query>", "Search privacy web on DuckDuckGo")
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "ACTIVE CUSTOM ALIASES:",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                if (aliases.isEmpty()) {
-                    Text(
-                        text = "No custom aliases created yet. Add them in Settings.",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = KernTextSecondary, fontSize = 12.sp)
-                    )
-                } else {
-                    aliases.forEach { alias ->
-                        HelpItem(alias.alias, "➔ ${alias.targetCommandOrPackage}")
-                    }
-                }
+                HelpItem("r <query>", "Search posts/subreddits on Reddit")
+                HelpItem("x <query>", "Search tweets on X / Twitter")
 
                 Spacer(modifier = Modifier.height(16.dp))
 

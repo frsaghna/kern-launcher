@@ -40,15 +40,12 @@ class MainActivity : ComponentActivity() {
             KernTheme(userSettings = userSettings) {
                 var currentScreen by remember { mutableStateOf(Screen.HOME) }
 
-                BackHandler(enabled = true) {
+                val backHandlerEnabled = currentScreen == Screen.SETTINGS || query.isNotEmpty()
+                BackHandler(enabled = backHandlerEnabled) {
                     if (currentScreen == Screen.SETTINGS) {
                         currentScreen = Screen.HOME
-                    } else {
-                        if (query.isNotEmpty()) {
-                            homeViewModel.onQueryChange("")
-                        } else {
-                            // Consumed on Home screen - prevents Activity from restarting or finishing
-                        }
+                    } else if (query.isNotEmpty()) {
+                        homeViewModel.onQueryChange("")
                     }
                 }
 

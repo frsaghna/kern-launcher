@@ -30,7 +30,8 @@ fun DateView(
     LaunchedEffect(Unit) {
         while (true) {
             currentDate = Date()
-            delay(60000)
+            val millisUntilNextMinute = 60_000L - (System.currentTimeMillis() % 60_000L)
+            delay(millisUntilNextMinute.coerceAtLeast(1000L))
         }
     }
 

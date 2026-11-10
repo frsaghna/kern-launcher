@@ -3,7 +3,6 @@ package com.kern.launcher.search.engine
 import android.provider.Settings
 import com.kern.launcher.command.parser.CommandParser
 import com.kern.launcher.command.parser.InputTokenizer
-import com.kern.launcher.model.Alias
 import com.kern.launcher.model.AppInfo
 import com.kern.launcher.model.Command
 import com.kern.launcher.model.SearchResult
@@ -70,13 +69,11 @@ class SearchEngine {
     fun search(
         query: String,
         apps: List<AppInfo>,
-        aliases: List<Alias>,
         hiddenPackageNames: Set<String> = emptySet(),
         aiProvider: String = "CHATGPT"
     ): List<SearchResult> {
         val trimmed = query.trim()
         val results = mutableListOf<SearchResult>()
-        val aliasMap = aliases.associateBy { it.alias.lowercase() }
 
         // Filter out hidden apps for regular app launcher list
         val visibleApps = apps.filter { it.packageName !in hiddenPackageNames }
@@ -101,8 +98,8 @@ class SearchEngine {
         val tokenized = InputTokenizer.tokenize(trimmed)
         val keyword = tokenized.keyword.lowercase()
 
-        // 0. Downloader Command Check (down, dl, ytdl)
-        if (keyword in listOf("down", "dl", "ytdl")) {
+        // 0. Downloader Command Check (dl)
+        if (keyword == "dl") {
             val targetUrl = tokenized.args.trim()
             val hasUrl = targetUrl.isNotBlank()
             val platform = if (hasUrl) detectMediaPlatform(targetUrl) else "yt-dlp"
@@ -151,14 +148,14 @@ class SearchEngine {
         }
 
         // 1. Built-in Kern Settings Command Check (Exact keyword match)
-        val settingsKeywords = listOf("settings", "setting", "config", "pref", "kern")
+        val settingsKeywords = listOf("pref", "conf")
         if (keyword in settingsKeywords) {
             results.add(
                 SearchResult(
                     id = "builtin_settings",
                     type = SearchResultType.BUILTIN_COMMAND,
-                    title = "Kern Launcher Settings",
-                    subtitle = "Open theme, alias, font & preferences config",
+                    title = "Kern Launcher Preferences",
+                    subtitle = "Open theme, font & preferences config",
                     actionCommand = Command.OpenSettings,
                     score = 4000.0
                 )
@@ -195,14 +192,14 @@ class SearchEngine {
         }
 
         // 3. Help Command Check
-        val helpKeywords = listOf("help", "?", "manual")
+        val helpKeywords = listOf("help", "?")
         if (keyword in helpKeywords) {
             results.add(
                 SearchResult(
                     id = "builtin_help",
                     type = SearchResultType.BUILTIN_COMMAND,
                     title = "Kern Command Manual (Help)",
-                    subtitle = "Usage manual, command syntax & aliases",
+                    subtitle = "Usage manual & command syntax",
                     actionCommand = Command.Help,
                     score = 2500.0
                 )
@@ -210,7 +207,7 @@ class SearchEngine {
         }
 
         // 4. Hidden Apps Command Check
-        val hiddenKeywords = listOf("hidden", "hiddenapps", "secret")
+        val hiddenKeywords = listOf("hidden")
         if (keyword in hiddenKeywords) {
             results.add(
                 SearchResult(
@@ -225,7 +222,7 @@ class SearchEngine {
         }
 
         // 5. TUI View Mode Toggle Command Check
-        val tuiKeywords = listOf("tui", "tuiview", "terminal")
+        val tuiKeywords = listOf("tui")
         if (keyword in tuiKeywords) {
             results.add(
                 SearchResult(
@@ -302,22 +299,7 @@ class SearchEngine {
             }
         }
 
-        // 9. Alias Check
-        aliasMap[keyword]?.let { userAlias ->
-            val resolvedCommand = CommandParser.parse("${userAlias.targetCommandOrPackage} ${tokenized.args}".trim())
-            results.add(
-                SearchResult(
-                    id = "alias_${userAlias.alias}",
-                    type = SearchResultType.ALIAS,
-                    title = "Alias: ${userAlias.alias} ➔ ${userAlias.targetCommandOrPackage}",
-                    subtitle = "Execute user custom alias",
-                    actionCommand = Command.CustomAlias(userAlias.alias, resolvedCommand),
-                    score = 2000.0
-                )
-            )
-        }
-
-        // 10. Built-in Deep Search & Custom App Commands (STRICT EXACT MATCHES ONLY)
+        // 9. Built-in Deep Search & Custom App Commands (STRICT EXACT MATCHES ONLY)
         when (keyword) {
             "ai" -> {
                 val providerName = when (aiProvider.uppercase()) {
@@ -337,7 +319,7 @@ class SearchEngine {
                     )
                 )
             }
-            "log", "lazylogs" -> {
+            "log" -> {
                 val parsedLazyLogs = CommandParser.parse(trimmed) as? Command.LazyLogsAdd
                 if (parsedLazyLogs != null) {
                     results.add(
@@ -352,7 +334,7 @@ class SearchEngine {
                     )
                 }
             }
-            "maps", "map" -> {
+            "map" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_maps",
@@ -376,7 +358,7 @@ class SearchEngine {
                     )
                 )
             }
-            "spot", "spotify", "music" -> {
+            "spot" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_spotify",
@@ -388,7 +370,7 @@ class SearchEngine {
                     )
                 )
             }
-            "play", "store", "ps" -> {
+            "ps" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_playstore",
@@ -400,7 +382,7 @@ class SearchEngine {
                     )
                 )
             }
-            "gh", "github" -> {
+            "gh" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_github",
@@ -412,7 +394,7 @@ class SearchEngine {
                     )
                 )
             }
-            "wiki", "wikipedia" -> {
+            "wiki" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_wiki",
@@ -424,7 +406,7 @@ class SearchEngine {
                     )
                 )
             }
-            "reddit", "r" -> {
+            "r" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_reddit",
@@ -436,7 +418,7 @@ class SearchEngine {
                     )
                 )
             }
-            "x", "tw", "twitter" -> {
+            "x" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_twitter",
@@ -448,25 +430,13 @@ class SearchEngine {
                     )
                 )
             }
-            "ddg", "duck" -> {
-                results.add(
-                    SearchResult(
-                        id = "builtin_ddg",
-                        type = SearchResultType.BUILTIN_COMMAND,
-                        title = "DuckDuckGo",
-                        subtitle = if (tokenized.args.isBlank()) "Launch DuckDuckGo app" else "Search '${tokenized.args}' on DuckDuckGo",
-                        actionCommand = Command.DuckDuckGoSearch(tokenized.args),
-                        score = 1500.0
-                    )
-                )
-            }
-            "g", "google" -> {
+            "g" -> {
                 results.add(
                     SearchResult(
                         id = "builtin_google",
                         type = SearchResultType.BUILTIN_COMMAND,
                         title = "Google Search",
-                        subtitle = if (tokenized.args.isBlank()) "Launch Google app" else "Search '${tokenized.args}' on Google",
+                        subtitle = if (tokenized.args.isBlank()) "Launch Google Search app" else "Search '${tokenized.args}' with Google Search",
                         actionCommand = Command.GoogleSearch(tokenized.args),
                         score = 1500.0
                     )

@@ -3,8 +3,7 @@ package com.kern.launcher.ui.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -46,7 +45,6 @@ fun HomeScreen(
     val searchResults by viewModel.searchResults.collectAsState()
     val selectedIndex by viewModel.selectedIndex.collectAsState()
     val userSettings by viewModel.userSettings.collectAsState()
-    val aliases by viewModel.aliases.collectAsState()
     val hiddenApps by viewModel.hiddenApps.collectAsState()
     val context = LocalContext.current
 
@@ -65,7 +63,6 @@ fun HomeScreen(
 
     if (showHelpDialog) {
         HelpDialog(
-            aliases = aliases,
             sharpCorners = userSettings.sharpCorners,
             onDismiss = { showHelpDialog = false }
         )
@@ -96,6 +93,48 @@ fun HomeScreen(
         else -> Alignment.Start
     }
 
+    val hasSwipeActions = userSettings.swipeLeftPackage.isNotBlank() || userSettings.swipeRightPackage.isNotBlank()
+    val gestureModifier = if (hasSwipeActions) {
+        Modifier.pointerInput(userSettings.swipeLeftPackage, userSettings.swipeRightPackage) {
+            var totalX = 0f
+            var totalY = 0f
+            var isEdgeTouch = false
+            val edgeInsetPx = 36.dp.toPx()
+
+            detectDragGestures(
+                onDragStart = { offset ->
+                    totalX = 0f
+                    totalY = 0f
+                    // Avoid intercepting system back / edge gestures
+                    isEdgeTouch = offset.x < edgeInsetPx || offset.x > (size.width - edgeInsetPx)
+                },
+                onDragEnd = {
+                    if (!isEdgeTouch && kotlin.math.abs(totalX) > 150f && kotlin.math.abs(totalX) > kotlin.math.abs(totalY) * 2.5f) {
+                        if (totalX < -150f && userSettings.swipeLeftPackage.isNotBlank()) {
+                            val intent = context.packageManager.getLaunchIntentForPackage(userSettings.swipeLeftPackage)
+                            if (intent != null) context.startActivity(intent)
+                        } else if (totalX > 150f && userSettings.swipeRightPackage.isNotBlank()) {
+                            val intent = context.packageManager.getLaunchIntentForPackage(userSettings.swipeRightPackage)
+                            if (intent != null) context.startActivity(intent)
+                        }
+                    }
+                },
+                onDragCancel = {
+                    totalX = 0f
+                    totalY = 0f
+                },
+                onDrag = { _, dragAmount ->
+                    if (!isEdgeTouch) {
+                        totalX += dragAmount.x
+                        totalY += dragAmount.y
+                    }
+                }
+            )
+        }
+    } else {
+        Modifier
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = containerBg
@@ -104,34 +143,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .pointerInput(userSettings.swipeLeftPackage, userSettings.swipeRightPackage) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        var change = down
-                        var totalX = 0f
-                        var totalY = 0f
-
-                        while (change.pressed) {
-                            val event = awaitPointerEvent()
-                            val current = event.changes.firstOrNull() ?: break
-                            val delta = current.position - current.previousPosition
-                            totalX += delta.x
-                            totalY += delta.y
-                            change = current
-                        }
-
-                        // Only trigger gesture if horizontal drag is dominant (pure horizontal swipe)
-                        if (kotlin.math.abs(totalX) > 150f && kotlin.math.abs(totalX) > kotlin.math.abs(totalY) * 2.5f) {
-                            if (totalX < -150f && userSettings.swipeLeftPackage.isNotBlank()) {
-                                val intent = context.packageManager.getLaunchIntentForPackage(userSettings.swipeLeftPackage)
-                                if (intent != null) context.startActivity(intent)
-                            } else if (totalX > 150f && userSettings.swipeRightPackage.isNotBlank()) {
-                                val intent = context.packageManager.getLaunchIntentForPackage(userSettings.swipeRightPackage)
-                                if (intent != null) context.startActivity(intent)
-                            }
-                        }
-                    }
-                }
+                .then(gestureModifier)
                 .padding(horizontal = 24.dp)
         ) {
             Column(

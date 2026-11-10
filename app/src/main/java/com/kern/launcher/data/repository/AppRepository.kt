@@ -18,12 +18,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 class AppRepository(
     private val context: Context,
     private val appUsageDao: AppUsageDao
 ) {
+
+    private val iconCache = ConcurrentHashMap<String, ImageBitmap>()
 
     fun getInstalledAppsFlow(): Flow<List<AppInfo>> {
         return appUsageDao.getAllAppUsages().combine(scanAppsFlow()) { usages, scannedApps ->
@@ -43,13 +47,22 @@ class AppRepository(
     }
 
     private fun scanAppsFlow(): Flow<List<AppInfo>> = callbackFlow {
-        // Emit initial scan
-        trySend(scanApps())
+        // Emit initial scan on IO dispatcher
+        launch(Dispatchers.IO) {
+            trySend(scanApps())
+        }
 
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, intent: Intent?) {
-                // When package added, removed, or changed -> re-scan apps immediately
-                trySend(scanApps())
+                // Invalidate cached icon for modified/removed package
+                val changedPackage = intent?.data?.schemeSpecificPart
+                if (changedPackage != null) {
+                    iconCache.remove(changedPackage)
+                }
+                // When package added, removed, or changed -> re-scan apps off the main thread
+                launch(Dispatchers.IO) {
+                    trySend(scanApps())
+                }
             }
         }
 
@@ -81,18 +94,25 @@ class AppRepository(
         val resolveInfos = packageManager.queryIntentActivities(intent, PackageManager.MATCH_ALL)
         return resolveInfos.mapNotNull { resolveInfo ->
             val packageName = resolveInfo.activityInfo.packageName
+            if (packageName.isBlank()) return@mapNotNull null
+
             val activityName = resolveInfo.activityInfo.name
             val label = resolveInfo.loadLabel(packageManager).toString()
-            val drawableIcon = try {
-                resolveInfo.loadIcon(packageManager)
-            } catch (e: Exception) {
-                null
+
+            val iconBitmap = iconCache[packageName] ?: run {
+                try {
+                    val drawableIcon = resolveInfo.loadIcon(packageManager)
+                    val bitmap = drawableIcon?.toImageBitmap(96)
+                    if (bitmap != null) {
+                        iconCache[packageName] = bitmap
+                    }
+                    bitmap
+                } catch (e: Exception) {
+                    null
+                }
             }
 
-            val iconBitmap = drawableIcon?.toImageBitmap(96)
-
-            if (packageName.isBlank()) null
-            else AppInfo(
+            AppInfo(
                 packageName = packageName,
                 activityName = activityName,
                 label = label,

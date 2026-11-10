@@ -1,5 +1,6 @@
 package com.kern.launcher.service.intent
 
+import android.app.SearchManager
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
@@ -122,13 +123,30 @@ object IntentFactory {
     }
 
     fun createGoogleSearchIntent(context: Context, query: String): Intent {
-        return if (query.isNotBlank()) {
+        if (query.isNotBlank()) {
+            val googleSearchIntent = Intent(Intent.ACTION_WEB_SEARCH).apply {
+                putExtra(SearchManager.QUERY, query)
+                setPackage("com.google.android.googlequicksearchbox")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (googleSearchIntent.resolveActivity(context.packageManager) != null) {
+                return googleSearchIntent
+            }
+
+            val genericSearchIntent = Intent(Intent.ACTION_WEB_SEARCH).apply {
+                putExtra(SearchManager.QUERY, query)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            if (genericSearchIntent.resolveActivity(context.packageManager) != null) {
+                return genericSearchIntent
+            }
+
             val uri = Uri.parse("https://www.google.com/search?q=${Uri.encode(query)}")
-            Intent(Intent.ACTION_VIEW, uri).apply {
+            return Intent(Intent.ACTION_VIEW, uri).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
         } else {
-            launchAppOrWeb(context, listOf("com.google.android.googlequicksearchbox"), "https://www.google.com")
+            return launchAppOrWeb(context, listOf("com.google.android.googlequicksearchbox"), "https://www.google.com")
         }
     }
 
@@ -253,17 +271,6 @@ object IntentFactory {
             }
         } else {
             launchAppOrWeb(context, listOf("com.twitter.android", "com.twitter.android.lite"), "https://x.com")
-        }
-    }
-
-    fun createDuckDuckGoSearchIntent(context: Context, query: String): Intent {
-        return if (query.isNotBlank()) {
-            val uri = Uri.parse("https://duckduckgo.com/?q=${Uri.encode(query)}")
-            Intent(Intent.ACTION_VIEW, uri).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        } else {
-            launchAppOrWeb(context, listOf("com.duckduckgo.mobile.android"), "https://duckduckgo.com")
         }
     }
 

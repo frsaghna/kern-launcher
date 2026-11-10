@@ -65,7 +65,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kern.launcher.model.Alias
 import com.kern.launcher.ui.components.AppPickerDialog
 import com.kern.launcher.ui.components.ColorPickerDialog
 import com.kern.launcher.ui.components.HelpDialog
@@ -84,11 +83,8 @@ fun SettingsScreen(
 ) {
     val userSettings by viewModel.userSettings.collectAsState()
     val installedApps by viewModel.installedApps.collectAsState()
-    val aliases by viewModel.aliases.collectAsState()
     val context = LocalContext.current
 
-    var newAliasName by remember { mutableStateOf("") }
-    var newAliasTarget by remember { mutableStateOf("") }
     var showHelpDialog by remember { mutableStateOf(false) }
     var themeSearchQuery by remember { mutableStateOf("") }
 
@@ -102,7 +98,6 @@ fun SettingsScreen(
 
     if (showHelpDialog) {
         HelpDialog(
-            aliases = aliases,
             sharpCorners = userSettings.sharpCorners,
             onDismiss = { showHelpDialog = false }
         )
@@ -590,90 +585,6 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Custom Aliases Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(cardCorner)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.TextFields, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Custom Command Aliases",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = newAliasName,
-                            onValueChange = { newAliasName = it },
-                            placeholder = { Text("Alias (e.g. wa)", color = KernTextSecondary) },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = KernDarkSurfaceBorder
-                            )
-                        )
-
-                        OutlinedTextField(
-                            value = newAliasTarget,
-                            onValueChange = { newAliasTarget = it },
-                            placeholder = { Text("Target (e.g. whatsapp)", color = KernTextSecondary) },
-                            modifier = Modifier.weight(1.5f),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = KernDarkSurfaceBorder
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = {
-                            if (newAliasName.isNotBlank() && newAliasTarget.isNotBlank()) {
-                                viewModel.addAlias(newAliasName.trim(), newAliasTarget.trim())
-                                newAliasName = ""
-                                newAliasTarget = ""
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(cardCorner),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("ADD ALIAS", fontWeight = FontWeight.Bold)
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    if (aliases.isEmpty()) {
-                        Text(
-                            text = "No custom aliases added yet.",
-                            style = MaterialTheme.typography.bodySmall.copy(color = KernTextSecondary)
-                        )
-                    } else {
-                        aliases.forEach { alias ->
-                            AliasItemRow(
-                                alias = alias,
-                                onDelete = { viewModel.deleteAlias(alias.alias) }
-                            )
-                        }
-                    }
-                }
-            }
-
             Spacer(modifier = Modifier.height(140.dp))
         }
     }
@@ -919,34 +830,5 @@ fun ThemeChip(
                 fontSize = 11.sp
             )
         )
-    }
-}
-
-@Composable
-fun AliasItemRow(
-    alias: Alias,
-    onDelete: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "${alias.alias} ➔ ${alias.targetCommandOrPackage}",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            ),
-            modifier = Modifier.weight(1f)
-        )
-        IconButton(onClick = onDelete) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete Alias",
-                tint = KernRed
-            )
-        }
     }
 }
